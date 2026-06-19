@@ -58,6 +58,10 @@ function AuthPage() {
           } catch (err) {
             console.warn("Admin claim skipped:", err);
           }
+          await refreshRole();
+          toast.success("Contractor account ready!");
+          navigate({ to: "/admin" });
+          return;
         }
         await refreshRole();
         toast.success("Account created!");
