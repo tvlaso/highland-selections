@@ -87,6 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Highland Remodeling | Selections Portal" },
+      { name: "twitter:description", content: "Review and approve your bath, kitchen, and tile selections for your Highland Remodeling project." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/095c535a-357d-492f-877e-8aab54a26251/id-preview-a2e2846a--253f92db-ce1d-441d-8871-c9022904999e.lovable.app-1781903599394.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/095c535a-357d-492f-877e-8aab54a26251/id-preview-a2e2846a--253f92db-ce1d-441d-8871-c9022904999e.lovable.app-1781903599394.png" },
     ],
     links: [
       {
