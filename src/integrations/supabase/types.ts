@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      master_catalog: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          price: number | null
+          product_name: string
+          product_url: string | null
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          price?: number | null
+          product_name: string
+          product_url?: string | null
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          price?: number | null
+          product_name?: string
+          product_url?: string | null
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -37,6 +79,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      project_selection_options: {
+        Row: {
+          catalog_item_id: string
+          category: string
+          created_at: string
+          id: string
+          is_selected: boolean
+          project_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          catalog_item_id: string
+          category: string
+          created_at?: string
+          id?: string
+          is_selected?: boolean
+          project_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          catalog_item_id?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_selected?: boolean
+          project_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_selection_options_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "master_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_selection_options_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_updates: {
         Row: {
@@ -102,65 +192,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      selections: {
-        Row: {
-          actual_price: number | null
-          allowance_price: number | null
-          category: string
-          contractor_notes: string | null
-          created_at: string
-          customer_notes: string | null
-          id: string
-          image_url: string | null
-          item_name: string
-          product_link: string | null
-          project_id: string
-          sort_order: number
-          status: Database["public"]["Enums"]["selection_status"]
-          updated_at: string
-        }
-        Insert: {
-          actual_price?: number | null
-          allowance_price?: number | null
-          category: string
-          contractor_notes?: string | null
-          created_at?: string
-          customer_notes?: string | null
-          id?: string
-          image_url?: string | null
-          item_name: string
-          product_link?: string | null
-          project_id: string
-          sort_order?: number
-          status?: Database["public"]["Enums"]["selection_status"]
-          updated_at?: string
-        }
-        Update: {
-          actual_price?: number | null
-          allowance_price?: number | null
-          category?: string
-          contractor_notes?: string | null
-          created_at?: string
-          customer_notes?: string | null
-          id?: string
-          image_url?: string | null
-          item_name?: string
-          product_link?: string | null
-          project_id?: string
-          sort_order?: number
-          status?: Database["public"]["Enums"]["selection_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "selections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_roles: {
         Row: {
