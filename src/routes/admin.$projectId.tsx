@@ -1,18 +1,32 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Trash2, Megaphone, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Megaphone,
+  ExternalLink,
+  ArrowUp,
+  ArrowDown,
+  Check,
+  Library,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
 import { SignedImage } from "@/components/SignedImage";
-import { StatusBadge } from "@/components/StatusBadge";
-import { SelectionDialog, type EditableSelection } from "@/components/SelectionDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -20,17 +34,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  CATEGORIES,
-  PROJECT_STATUSES,
-  formatCurrency,
-  type SelectionStatus,
-} from "@/lib/constants";
+import { CATEGORIES, PROJECT_STATUSES, formatCurrency } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/$projectId")({
   head: () => ({ meta: [{ title: "Manage Project | Highland Remodeling" }] }),
   component: ProjectDetail,
 });
+
+type CatalogItem = {
+  id: string;
+  product_name: string;
+  category: string;
+  vendor: string | null;
+  price: number | null;
+  image_url: string | null;
+  product_url: string | null;
+  description: string | null;
+  active: boolean;
+};
+
+type OptionRow = {
+  id: string;
+  project_id: string;
+  catalog_item_id: string;
+  category: string;
+  sort_order: number;
+  is_selected: boolean;
+  master_catalog: CatalogItem | null;
+};
 
 function ProjectDetail() {
   const { projectId } = Route.useParams();
@@ -48,18 +79,22 @@ function ProjectDetail() {
     queryKey: ["admin-project", projectId],
     enabled: role === "admin",
     queryFn: async () => {
-      const [{ data: project }, { data: selections }, { data: updates }] = await Promise.all([
+      const [{ data: project }, { data: options }, { data: updates }] = await Promise.all([
         supabase.from("projects").select("*").eq("id", projectId).maybeSingle(),
-        supabase.from("selections").select("*").eq("project_id", projectId).order("sort_order"),
+        supabase
+          .from("project_selection_options")
+          .select("*, master_catalog(*)")
+          .eq("project_id", projectId)
+          .order("sort_order"),
         supabase.from("project_updates").select("*").eq("project_id", projectId).order("created_at", { ascending: false }),
       ]);
-      return { project, selections: selections ?? [], updates: updates ?? [] };
+      return {
+        project,
+        options: (options ?? []) as unknown as OptionRow[],
+        updates: updates ?? [],
+      };
     },
   });
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<EditableSelection | undefined>();
-  const [addCategory, setAddCategory] = useState<string>();
 
   const statusMut = useMutation({
     mutationFn: async (status: string) => {
@@ -69,17 +104,39 @@ function ProjectDetail() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
   });
 
-  const deleteMut = useMutation({
+  const removeMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("selections").delete().eq("id", id);
+      const { error } = await supabase.from("project_selection_options").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
-      toast.success("Selection removed");
+      toast.success("Removed from project");
     },
   });
 
+  const categoryMut = useMutation({
+    mutationFn: async ({ id, category }: { id: string; category: string }) => {
+      const { error } = await supabase.from("project_selection_options").update({ category }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+  });
+
+  const reorderMut = useMutation({
+    mutationFn: async (rows: { id: string; sort_order: number }[]) => {
+      for (const r of rows) {
+        const { error } = await supabase
+          .from("project_selection_options")
+          .update({ sort_order: r.sort_order })
+          .eq("id", r.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+  });
+
+  // project updates
   const [uTitle, setUTitle] = useState("");
   const [uBody, setUBody] = useState("");
   const updateMut = useMutation({
@@ -107,6 +164,22 @@ function ProjectDetail() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
   });
 
+  const [addOpen, setAddOpen] = useState(false);
+
+  const options = data?.options ?? [];
+
+  const move = (cat: string, index: number, dir: -1 | 1) => {
+    const items = options.filter((o) => o.category === cat);
+    const target = index + dir;
+    if (target < 0 || target >= items.length) return;
+    const a = items[index];
+    const b = items[target];
+    reorderMut.mutate([
+      { id: a.id, sort_order: b.sort_order },
+      { id: b.id, sort_order: a.sort_order },
+    ]);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -117,7 +190,6 @@ function ProjectDetail() {
   }
 
   const project = data?.project;
-  const selections = data?.selections ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -145,75 +217,79 @@ function ProjectDetail() {
               </div>
             </section>
 
-            {/* Selections */}
+            {/* Selection options */}
             <section className="mt-8">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Selections</h2>
-                <Button
-                  variant="hero"
-                  size="sm"
-                  onClick={() => { setEditing(undefined); setAddCategory(undefined); setDialogOpen(true); }}
-                >
-                  <Plus className="h-4 w-4" /> Add Selection
-                </Button>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold">Selection Options</h2>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin/catalog"><Library className="h-4 w-4" /> Catalog</Link>
+                  </Button>
+                  <Button variant="hero" size="sm" onClick={() => setAddOpen(true)}>
+                    <Plus className="h-4 w-4" /> Add from Catalog
+                  </Button>
+                </div>
               </div>
 
               <div className="mt-4 space-y-6">
-                {CATEGORIES.map((cat) => {
-                  const items = selections.filter((s) => s.category === cat);
+                {CATEGORIES.filter((cat) => options.some((o) => o.category === cat)).map((cat) => {
+                  const items = options.filter((o) => o.category === cat);
                   return (
                     <div key={cat}>
-                      <div className="mb-2 flex items-center justify-between">
-                        <h3 className="border-l-4 border-accent pl-3 text-sm font-bold uppercase tracking-wide">{cat}</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => { setEditing(undefined); setAddCategory(cat); setDialogOpen(true); }}
-                        >
-                          <Plus className="h-3.5 w-3.5" /> Add
-                        </Button>
-                      </div>
-                      {items.length === 0 ? (
-                        <p className="rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
-                          No items in this category.
-                        </p>
-                      ) : (
-                        <div className="space-y-2">
-                          {items.map((s) => (
-                            <div key={s.id} className="flex gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
-                              <SignedImage path={s.image_url} alt={s.item_name} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+                      <h3 className="mb-2 border-l-4 border-accent pl-3 text-sm font-bold uppercase tracking-wide">{cat}</h3>
+                      <div className="space-y-2">
+                        {items.map((o, idx) => {
+                          const c = o.master_catalog;
+                          return (
+                            <div key={o.id} className="flex gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
+                              <SignedImage path={c?.image_url ?? null} alt={c?.product_name ?? ""} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
-                                  <h4 className="truncate font-semibold">{s.item_name}</h4>
-                                  <StatusBadge status={s.status as SelectionStatus} />
+                                  <h4 className="truncate font-semibold">{c?.product_name ?? "Unknown product"}</h4>
+                                  {o.is_selected && (
+                                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-[oklch(0.45_0.13_150)]">
+                                      <Check className="h-3 w-3" /> Selected
+                                    </span>
+                                  )}
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                  {formatCurrency(s.allowance_price)} allowance · {formatCurrency(s.actual_price)} actual
+                                  {c?.vendor ? `${c.vendor} · ` : ""}{formatCurrency(c?.price)}
                                 </p>
-                                {s.product_link && (
-                                  <a href={s.product_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
+                                {c?.product_url && (
+                                  <a href={c.product_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
                                     Product <ExternalLink className="h-3 w-3" />
                                   </a>
                                 )}
-                                {s.customer_notes && (
-                                  <p className="mt-1 text-sm"><span className="font-medium">Customer: </span><span className="text-muted-foreground">{s.customer_notes}</span></p>
-                                )}
-                                <div className="mt-2 flex gap-1">
-                                  <Button variant="outline" size="sm" onClick={() => { setEditing(s as EditableSelection); setDialogOpen(true); }}>
-                                    <Pencil className="h-3.5 w-3.5" /> Edit
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <Select value={o.category} onValueChange={(v) => categoryMut.mutate({ id: o.id, category: v })}>
+                                    <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      {CATEGORIES.map((cc) => <SelectItem key={cc} value={cc}>{cc}</SelectItem>)}
+                                    </SelectContent>
+                                  </Select>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === 0} onClick={() => move(cat, idx, -1)}>
+                                    <ArrowUp className="h-4 w-4" />
                                   </Button>
-                                  <Button variant="ghost" size="sm" onClick={() => deleteMut.mutate(s.id)}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === items.length - 1} onClick={() => move(cat, idx, 1)}>
+                                    <ArrowDown className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => removeMut.mutate(o.id)}>
                                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                   </Button>
                                 </div>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          );
+                        })}
+                      </div>
                     </div>
                   );
                 })}
+                {options.length === 0 && (
+                  <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">
+                    No products added yet. Use “Add from Catalog” to assign options for this project.
+                  </p>
+                )}
               </div>
             </section>
 
@@ -253,16 +329,106 @@ function ProjectDetail() {
               </div>
             </section>
 
-            <SelectionDialog
+            <AddFromCatalogDialog
               projectId={projectId}
-              open={dialogOpen}
-              onOpenChange={setDialogOpen}
-              existing={editing}
-              defaultCategory={addCategory}
+              open={addOpen}
+              onOpenChange={setAddOpen}
+              existingCatalogIds={options.map((o) => o.catalog_item_id)}
             />
           </>
         )}
       </main>
     </div>
+  );
+}
+
+function AddFromCatalogDialog({
+  projectId,
+  open,
+  onOpenChange,
+  existingCatalogIds,
+}: {
+  projectId: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  existingCatalogIds: string[];
+}) {
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+
+  const { data: items, isLoading } = useQuery({
+    queryKey: ["catalog-active"],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("master_catalog")
+        .select("*")
+        .eq("active", true)
+        .order("category")
+        .order("product_name");
+      if (error) throw error;
+      return data as CatalogItem[];
+    },
+  });
+
+  const addMut = useMutation({
+    mutationFn: async (item: CatalogItem) => {
+      const { error } = await supabase.from("project_selection_options").insert({
+        project_id: projectId,
+        catalog_item_id: item.id,
+        category: item.category,
+        sort_order: Date.now(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      toast.success("Added to project");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (items ?? []).filter((i) => {
+      if (existingCatalogIds.includes(i.id)) return false;
+      if (!q) return true;
+      return (
+        i.product_name.toLowerCase().includes(q) ||
+        i.category.toLowerCase().includes(q) ||
+        (i.vendor ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [items, search, existingCatalogIds]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add from Master Catalog</DialogTitle>
+        </DialogHeader>
+        <Input placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="mt-2 space-y-2">
+          {isLoading ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">Loading catalog…</p>
+          ) : filtered.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">No products available.</p>
+          ) : (
+            filtered.map((i) => (
+              <div key={i.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5">
+                <SignedImage path={i.image_url} alt={i.product_name} className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{i.product_name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{i.category}{i.vendor ? ` · ${i.vendor}` : ""} · {formatCurrency(i.price)}</p>
+                </div>
+                <Button variant="orange" size="sm" disabled={addMut.isPending} onClick={() => addMut.mutate(i)}>
+                  <Plus className="h-4 w-4" /> Add
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
