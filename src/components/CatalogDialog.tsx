@@ -7,6 +7,7 @@ import { SignedImage } from "@/components/SignedImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -22,58 +23,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, SELECTION_STATUSES } from "@/lib/constants";
+import { CATEGORIES } from "@/lib/constants";
 
-export interface EditableSelection {
+export interface EditableCatalogItem {
   id?: string;
+  product_name: string;
   category: string;
-  item_name: string;
+  vendor: string | null;
+  price: number | null;
   image_url: string | null;
-  product_link: string | null;
-  allowance_price: number | null;
-  actual_price: number | null;
-  status: string;
-  contractor_notes: string | null;
+  product_url: string | null;
+  description: string | null;
+  active: boolean;
 }
 
-const blank = (category: string): EditableSelection => ({
-  category,
-  item_name: "",
+const blank = (): EditableCatalogItem => ({
+  product_name: "",
+  category: CATEGORIES[0],
+  vendor: null,
+  price: null,
   image_url: null,
-  product_link: null,
-  allowance_price: null,
-  actual_price: null,
-  status: "Pending",
-  contractor_notes: null,
+  product_url: null,
+  description: null,
+  active: true,
 });
 
-export function SelectionDialog({
-  projectId,
+export function CatalogDialog({
   open,
   onOpenChange,
   existing,
-  defaultCategory,
 }: {
-  projectId: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  existing?: EditableSelection;
-  defaultCategory?: string;
+  existing?: EditableCatalogItem;
 }) {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState<EditableSelection>(blank(defaultCategory ?? CATEGORIES[0]));
+  const [form, setForm] = useState<EditableCatalogItem>(blank());
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(existing ? { ...existing } : blank(defaultCategory ?? CATEGORIES[0]));
-  }, [open, existing, defaultCategory]);
+    if (open) setForm(existing ? { ...existing } : blank());
+  }, [open, existing]);
 
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
       const ext = file.name.split(".").pop();
-      const path = `${projectId}/${crypto.randomUUID()}.${ext}`;
+      const path = `catalog/${crypto.randomUUID()}.${ext}`;
       const { error } = await supabase.storage.from("product-photos").upload(path, file);
       if (error) throw error;
       setForm((f) => ({ ...f, image_url: path }));
@@ -88,27 +85,26 @@ export function SelectionDialog({
   const mutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        project_id: projectId,
+        product_name: form.product_name,
         category: form.category,
-        item_name: form.item_name,
+        vendor: form.vendor || null,
+        price: form.price,
         image_url: form.image_url,
-        product_link: form.product_link || null,
-        allowance_price: form.allowance_price,
-        actual_price: form.actual_price,
-        status: form.status as (typeof SELECTION_STATUSES)[number],
-        contractor_notes: form.contractor_notes || null,
+        product_url: form.product_url || null,
+        description: form.description || null,
+        active: form.active,
       };
       if (existing?.id) {
-        const { error } = await supabase.from("selections").update(payload).eq("id", existing.id);
+        const { error } = await supabase.from("master_catalog").update(payload).eq("id", existing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("selections").insert(payload);
+        const { error } = await supabase.from("master_catalog").insert(payload);
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-project"] });
-      toast.success(existing?.id ? "Selection updated" : "Selection added");
+      qc.invalidateQueries({ queryKey: ["catalog"] });
+      toast.success(existing?.id ? "Product updated" : "Product added to catalog");
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
@@ -120,9 +116,13 @@ export function SelectionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{existing?.id ? "Edit Selection" : "Add Selection"}</DialogTitle>
+          <DialogTitle>{existing?.id ? "Edit Product" : "Add Product"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Product name</Label>
+            <Input value={form.product_name} onChange={(e) => setForm((f) => ({ ...f, product_name: e.target.value }))} />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Category</Label>
@@ -134,44 +134,25 @@ export function SelectionDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {SELECTION_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>Price</Label>
+              <Input
+                type="number"
+                value={form.price ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, price: num(e.target.value) }))}
+              />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Item name</Label>
-            <Input value={form.item_name} onChange={(e) => setForm((f) => ({ ...f, item_name: e.target.value }))} />
+            <Label>Vendor</Label>
+            <Input value={form.vendor ?? ""} onChange={(e) => setForm((f) => ({ ...f, vendor: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
-            <Label>Product link</Label>
+            <Label>Product URL</Label>
             <Input
-              value={form.product_link ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, product_link: e.target.value }))}
+              value={form.product_url ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, product_url: e.target.value }))}
               placeholder="https://…"
             />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Allowance price</Label>
-              <Input
-                type="number"
-                value={form.allowance_price ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, allowance_price: num(e.target.value) }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Actual price</Label>
-              <Input
-                type="number"
-                value={form.actual_price ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, actual_price: num(e.target.value) }))}
-              />
-            </div>
           </div>
           <div className="space-y-1.5">
             <Label>Product photo</Label>
@@ -193,17 +174,24 @@ export function SelectionDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Contractor notes</Label>
+            <Label>Description / Notes</Label>
             <Textarea
-              value={form.contractor_notes ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, contractor_notes: e.target.value }))}
+              value={form.description ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={2}
             />
           </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label>Active</Label>
+              <p className="text-xs text-muted-foreground">Inactive products can't be added to projects.</p>
+            </div>
+            <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />
+          </div>
         </div>
         <DialogFooter>
-          <Button variant="hero" disabled={mutation.isPending || !form.item_name} onClick={() => mutation.mutate()}>
-            {existing?.id ? "Save Changes" : "Add Selection"}
+          <Button variant="hero" disabled={mutation.isPending || !form.product_name} onClick={() => mutation.mutate()}>
+            {existing?.id ? "Save Changes" : "Add Product"}
           </Button>
         </DialogFooter>
       </DialogContent>

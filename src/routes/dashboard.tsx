@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { MapPin, Calendar, Megaphone } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { MapPin, Calendar, Megaphone, ExternalLink, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
-import { CustomerSelectionCard, type SelectionRow } from "@/components/CustomerSelectionCard";
-import { CATEGORIES } from "@/lib/constants";
+import { SignedImage } from "@/components/SignedImage";
+import { Button } from "@/components/ui/button";
+import { CATEGORIES, formatCurrency } from "@/lib/constants";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -15,9 +17,30 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
+type CatalogItem = {
+  id: string;
+  product_name: string;
+  category: string;
+  vendor: string | null;
+  price: number | null;
+  image_url: string | null;
+  product_url: string | null;
+  description: string | null;
+};
+
+type OptionRow = {
+  id: string;
+  category: string;
+  sort_order: number;
+  is_selected: boolean;
+  catalog_item_id: string;
+  master_catalog: CatalogItem | null;
+};
+
 function Dashboard() {
   const { session, role, loading } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
   useEffect(() => {
     if (loading) return;
@@ -35,19 +58,60 @@ function Dashboard() {
         .order("created_at", { ascending: false })
         .limit(1);
       const project = projects?.[0] ?? null;
-      if (!project) return { project: null, selections: [], updates: [] };
+      if (!project) return { project: null, options: [] as OptionRow[], updates: [] };
 
-      const [{ data: selections }, { data: updates }] = await Promise.all([
-        supabase.from("selections").select("*").eq("project_id", project.id).order("sort_order"),
+      const [{ data: options }, { data: updates }] = await Promise.all([
+        supabase
+          .from("project_selection_options")
+          .select("*, master_catalog(*)")
+          .eq("project_id", project.id)
+          .order("sort_order"),
         supabase
           .from("project_updates")
           .select("*")
           .eq("project_id", project.id)
           .order("created_at", { ascending: false }),
       ]);
-      return { project, selections: selections ?? [], updates: updates ?? [] };
+      return {
+        project,
+        options: (options ?? []) as unknown as OptionRow[],
+        updates: updates ?? [],
+      };
     },
   });
+
+  // local selection: category -> optionId
+  const [picked, setPicked] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!data?.options) return;
+    const init: Record<string, string> = {};
+    for (const o of data.options) if (o.is_selected) init[o.category] = o.id;
+    setPicked(init);
+  }, [data?.options]);
+
+  const submitMut = useMutation({
+    mutationFn: async () => {
+      const opts = data?.options ?? [];
+      for (const o of opts) {
+        const shouldSelect = picked[o.category] === o.id;
+        if (shouldSelect !== o.is_selected) {
+          const { error } = await supabase
+            .from("project_selection_options")
+            .update({ is_selected: shouldSelect })
+            .eq("id", o.id);
+          if (error) throw error;
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customer-data"] });
+      toast.success("Your selections have been submitted!");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not submit"),
+  });
+
+  const options = data?.options ?? [];
+  const categoriesWithOptions = CATEGORIES.filter((cat) => options.some((o) => o.category === cat));
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,31 +174,87 @@ function Dashboard() {
             <section className="mt-8">
               <h2 className="mb-1 text-lg font-semibold">Your Selections</h2>
               <p className="mb-4 text-sm text-muted-foreground">
-                Review each item, then approve or request a change.
+                Browse the options for each category and choose your preferred one.
               </p>
-              {data.selections.length === 0 ? (
+              {options.length === 0 ? (
                 <p className="rounded-xl border border-border bg-card p-6 text-center text-muted-foreground">
-                  No selections have been added yet.
+                  No options have been added yet.
                 </p>
               ) : (
-                <div className="space-y-8">
-                  {CATEGORIES.filter((cat) =>
-                    data.selections.some((s) => s.category === cat),
-                  ).map((cat) => (
-                    <div key={cat}>
-                      <h3 className="mb-3 border-l-4 border-accent pl-3 text-base font-bold uppercase tracking-wide text-foreground">
-                        {cat}
-                      </h3>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        {data.selections
-                          .filter((s) => s.category === cat)
-                          .map((s) => (
-                            <CustomerSelectionCard key={s.id} item={s as SelectionRow} />
-                          ))}
+                <>
+                  <div className="space-y-8">
+                    {categoriesWithOptions.map((cat) => (
+                      <div key={cat}>
+                        <h3 className="mb-3 border-l-4 border-accent pl-3 text-base font-bold uppercase tracking-wide text-foreground">
+                          {cat}
+                        </h3>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {options
+                            .filter((o) => o.category === cat)
+                            .map((o) => {
+                              const c = o.master_catalog;
+                              const selected = picked[cat] === o.id;
+                              return (
+                                <button
+                                  type="button"
+                                  key={o.id}
+                                  onClick={() => setPicked((p) => ({ ...p, [cat]: o.id }))}
+                                  className={`overflow-hidden rounded-xl border bg-card text-left shadow-[var(--shadow-card)] transition-colors ${
+                                    selected ? "border-accent ring-2 ring-accent" : "border-border hover:border-accent"
+                                  }`}
+                                >
+                                  <div className="flex gap-3 p-3">
+                                    <SignedImage
+                                      path={c?.image_url ?? null}
+                                      alt={c?.product_name ?? ""}
+                                      className="h-24 w-24 shrink-0 rounded-lg object-cover"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <h4 className="font-semibold text-foreground">{c?.product_name}</h4>
+                                        {selected && (
+                                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
+                                            <Check className="h-3 w-3" /> Selected
+                                          </span>
+                                        )}
+                                      </div>
+                                      {c?.vendor && <p className="text-sm text-muted-foreground">{c.vendor}</p>}
+                                      <p className="text-sm font-medium text-foreground">{formatCurrency(c?.price)}</p>
+                                      {c?.description && (
+                                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
+                                      )}
+                                      {c?.product_url && (
+                                        <a
+                                          href={c.product_url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+                                        >
+                                          View product <ExternalLink className="h-3.5 w-3.5" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+
+                  <div className="sticky bottom-4 mt-8 flex justify-end">
+                    <Button
+                      variant="hero"
+                      size="lg"
+                      disabled={submitMut.isPending}
+                      onClick={() => submitMut.mutate()}
+                    >
+                      {submitMut.isPending ? "Submitting…" : "Submit Selections"}
+                    </Button>
+                  </div>
+                </>
               )}
             </section>
           </>

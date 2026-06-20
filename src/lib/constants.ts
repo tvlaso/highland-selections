@@ -11,9 +11,6 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
-export const SELECTION_STATUSES = ["Pending", "Approved", "Change Requested"] as const;
-export type SelectionStatus = (typeof SELECTION_STATUSES)[number];
-
 export const PROJECT_STATUSES = [
   "Planning",
   "In Progress",
