@@ -25,7 +25,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const { session, role, loading, refreshRole } = useAuth();
   const claim = useServerFn(claimAdmin);
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
