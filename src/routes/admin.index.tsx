@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, UserPlus, FolderKanban, ChevronRight, MapPin } from "lucide-react";
+import { Plus, UserPlus, FolderKanban, ChevronRight, MapPin, Library } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
@@ -118,6 +118,9 @@ function AdminHome() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold">Projects</h1>
           <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/admin/catalog"><Library className="h-4 w-4" /> Master Catalog</Link>
+            </Button>
             <Dialog open={custOpen} onOpenChange={setCustOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline"><UserPlus className="h-4 w-4" /> Add Customer</Button>
