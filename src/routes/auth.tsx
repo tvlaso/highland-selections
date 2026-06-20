@@ -99,60 +99,114 @@ function AuthPage() {
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "signup" && (
+          {mode === "forgot" ? (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setBusy(true);
+                try {
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                  });
+                  if (error) throw error;
+                  toast.success("Check your email for a reset link.");
+                  setMode("signin");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Something went wrong");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              className="space-y-4"
+            >
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full name</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Jane Homeowner"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
                   required
                 />
               </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                minLength={8}
-                required
-              />
-            </div>
-
-            {mode === "signup" && (
-              <label className="flex items-start gap-2.5 rounded-lg bg-secondary p-3 text-sm">
-                <Checkbox
-                  checked={isContractor}
-                  onCheckedChange={(v) => setIsContractor(Boolean(v))}
-                  className="mt-0.5"
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>
+                {busy ? "Please wait…" : "Send Reset Link"}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setMode("signin")}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
+              >
+                Back to sign in
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === "signup" && (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full name</Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Jane Homeowner"
+                    required
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
                 />
-                <span className="text-muted-foreground">
-                  I'm the contractor setting up the company admin account.
-                </span>
-              </label>
-            )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  minLength={8}
+                  required
+                />
+              </div>
 
-            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>
-              {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
-            </Button>
-          </form>
+              {mode === "signup" && (
+                <label className="flex items-start gap-2.5 rounded-lg bg-secondary p-3 text-sm">
+                  <Checkbox
+                    checked={isContractor}
+                    onCheckedChange={(v) => setIsContractor(Boolean(v))}
+                    className="mt-0.5"
+                  />
+                  <span className="text-muted-foreground">
+                    I'm the contractor setting up the company admin account.
+                  </span>
+                </label>
+              )}
+
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  onClick={() => setMode("forgot")}
+                  className="block text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Forgot password?
+                </button>
+              )}
+
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>
+                {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+              </Button>
+            </form>
+          )}
         </div>
         <p className="mt-6 text-center text-xs text-[oklch(0.85_0.02_255)]">
           Bath · Kitchen · Tile — your selections, all in one place.
