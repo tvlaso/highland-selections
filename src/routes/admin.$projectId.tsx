@@ -377,7 +377,7 @@ function AddFromCatalogDialog({
         project_id: projectId,
         catalog_item_id: item.id,
         category: item.category,
-        sort_order: Date.now(),
+        sort_order: existingCatalogIds.length + 1,
       });
       if (error) throw error;
     },
