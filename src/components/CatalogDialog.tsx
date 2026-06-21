@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CATEGORIES } from "@/lib/constants";
+import { createProductPhotoUpload } from "@/lib/admin.functions";
 
 export interface EditableCatalogItem {
   id?: string;
@@ -58,6 +60,7 @@ export function CatalogDialog({
   existing?: EditableCatalogItem;
 }) {
   const qc = useQueryClient();
+  const createUpload = useServerFn(createProductPhotoUpload);
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<EditableCatalogItem>(blank());
   const [uploading, setUploading] = useState(false);
@@ -69,9 +72,12 @@ export function CatalogDialog({
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
+      const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const path = `catalog/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("product-photos").upload(path, file);
+      const upload = await createUpload({ data: { path } });
+      const { error } = await supabase.storage.from("product-photos").uploadToSignedUrl(path, upload.token, file, {
+        contentType: file.type || "image/jpeg",
+      });
       if (error) throw error;
       setForm((f) => ({ ...f, image_url: path }));
       toast.success("Photo uploaded");

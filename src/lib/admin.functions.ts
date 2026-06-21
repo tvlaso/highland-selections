@@ -92,3 +92,31 @@ export const listCustomers = createServerFn({ method: "GET" })
 
     return profiles ?? [];
   });
+
+/** Creates a short-lived upload token for product photos. Admin-only. */
+export const createProductPhotoUpload = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        path: z
+          .string()
+          .regex(/^catalog\/[a-zA-Z0-9._-]+$/, "Invalid photo path"),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: upload, error } = await supabaseAdmin.storage
+      .from("product-photos")
+      .createSignedUploadUrl(data.path, { upsert: false });
+    if (error) throw new Error(error.message);
+
+    return upload;
+  });
