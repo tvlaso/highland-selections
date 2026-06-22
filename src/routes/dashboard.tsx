@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { MapPin, Calendar, Megaphone, ExternalLink, Check, MessageSquare } from "lucide-react";
+import { MapPin, Calendar, Megaphone, ExternalLink, Check, MessageSquare, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
@@ -10,6 +11,8 @@ import { SignedImage } from "@/components/SignedImage";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CATEGORIES, formatCurrency } from "@/lib/constants";
+import { syncSelectionsVersion } from "@/lib/selections.functions";
+import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -44,6 +47,8 @@ function Dashboard() {
   const { session, role, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const syncVersion = useServerFn(syncSelectionsVersion);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -85,6 +90,36 @@ function Dashboard() {
 
   // notes drafts when requesting a change: optionId -> note text
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+
+  const handleExport = async () => {
+    if (!data?.project) return;
+    setExporting(true);
+    try {
+      const { version, lastModified } = await syncVersion({
+        data: { projectId: data.project.id },
+      });
+      await generateSelectionsPdf({
+        projectName: data.project.name,
+        customerName:
+          (session?.user?.user_metadata?.full_name as string | undefined) ??
+          session?.user?.email ??
+          "—",
+        address: data.project.address,
+        version,
+        lastModified,
+        options: options.map((o) => ({
+          id: o.id,
+          category: o.category,
+          customer_notes: o.customer_notes,
+          master_catalog: o.master_catalog,
+        })),
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not export PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const approveMut = useMutation({
     mutationFn: async (id: string) => {
@@ -178,7 +213,18 @@ function Dashboard() {
             )}
 
             <section className="mt-8">
-              <h2 className="mb-1 text-lg font-semibold">Your Selections</h2>
+              <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold">Your Selections</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={exporting || options.length === 0}
+                  onClick={handleExport}
+                >
+                  <FileDown className="h-4 w-4" />
+                  {exporting ? "Exporting…" : "Export Selections List"}
+                </Button>
+              </div>
               <p className="mb-4 text-sm text-muted-foreground">
                 Review each selection and approve it, or request a change with a note.
               </p>
