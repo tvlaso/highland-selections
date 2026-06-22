@@ -52,6 +52,16 @@ function AdminHome() {
     queryFn: () => listCustomersFn(),
   });
 
+  useEffect(() => {
+    if (customers.error) {
+      toast.error(
+        customers.error instanceof Error
+          ? customers.error.message
+          : "Could not load customers",
+      );
+    }
+  }, [customers.error]);
+
   const projects = useQuery({
     queryKey: ["admin-projects"],
     enabled: role === "admin",
@@ -108,8 +118,11 @@ function AdminHome() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
-  const customerName = (id: string | null) =>
-    customers.data?.find((c) => c.id === id)?.full_name ?? "Unassigned";
+  const customerName = (id: string | null) => {
+    if (!id) return "Unassigned";
+    if (customers.isLoading || !customers.data) return "…";
+    return customers.data.find((c) => c.id === id)?.full_name ?? "Unassigned";
+  };
 
   return (
     <div className="min-h-screen bg-background">
