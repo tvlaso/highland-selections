@@ -134,6 +134,47 @@ export type Database = {
           },
         ]
       }
+      project_timeline_events: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          project_id: string
+          related_spec_card_id: string | null
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          project_id: string
+          related_spec_card_id?: string | null
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          project_id?: string
+          related_spec_card_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_timeline_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_updates: {
         Row: {
           body: string | null
@@ -173,6 +214,9 @@ export type Database = {
           customer_id: string | null
           id: string
           name: string
+          selections_content_hash: string | null
+          selections_version: number
+          selections_version_updated_at: string | null
           start_date: string | null
           status: string
           updated_at: string
@@ -183,6 +227,9 @@ export type Database = {
           customer_id?: string | null
           id?: string
           name: string
+          selections_content_hash?: string | null
+          selections_version?: number
+          selections_version_updated_at?: string | null
           start_date?: string | null
           status?: string
           updated_at?: string
@@ -193,6 +240,9 @@ export type Database = {
           customer_id?: string | null
           id?: string
           name?: string
+          selections_content_hash?: string | null
+          selections_version?: number
+          selections_version_updated_at?: string | null
           start_date?: string | null
           status?: string
           updated_at?: string
