@@ -108,8 +108,11 @@ function AdminHome() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
-  const customerName = (id: string | null) =>
-    customers.data?.find((c) => c.id === id)?.full_name ?? "Unassigned";
+  const customerName = (id: string | null) => {
+    if (!id) return "Unassigned";
+    if (customers.isLoading || !customers.data) return "…";
+    return customers.data.find((c) => c.id === id)?.full_name ?? "Unassigned";
+  };
 
   return (
     <div className="min-h-screen bg-background">
