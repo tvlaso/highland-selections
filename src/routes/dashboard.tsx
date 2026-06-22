@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MapPin, Calendar, Megaphone, ExternalLink, Check } from "lucide-react";
+import { MapPin, Calendar, Megaphone, ExternalLink, Check, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
 import { SignedImage } from "@/components/SignedImage";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { CATEGORIES, formatCurrency } from "@/lib/constants";
 
 export const Route = createFileRoute("/dashboard")({
@@ -33,6 +34,8 @@ type OptionRow = {
   category: string;
   sort_order: number;
   is_selected: boolean;
+  status: string;
+  customer_notes: string | null;
   catalog_item_id: string;
   master_catalog: CatalogItem | null;
 };
