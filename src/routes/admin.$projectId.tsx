@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -12,6 +13,8 @@ import {
   ArrowDown,
   Check,
   Library,
+  FileDown,
+  History,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +38,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CATEGORIES, PROJECT_STATUSES, formatCurrency } from "@/lib/constants";
+import { syncSelectionsVersion } from "@/lib/selections.functions";
+import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 
 export const Route = createFileRoute("/admin/$projectId")({
   head: () => ({ meta: [{ title: "Manage Project | Highland Remodeling" }] }),
@@ -70,6 +75,9 @@ function ProjectDetail() {
   const { session, role, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const syncVersion = useServerFn(syncSelectionsVersion);
+  const [exporting, setExporting] = useState(false);
+  const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
 
   useEffect(() => {
     if (loading) return;
@@ -170,6 +178,57 @@ function ProjectDetail() {
 
   const options = data?.options ?? [];
 
+  const timeline = useQuery({
+    queryKey: ["admin-timeline", projectId],
+    enabled: role === "admin",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("project_timeline_events")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const handleExport = async () => {
+    if (!data?.project) return;
+    setExporting(true);
+    try {
+      let customerName = "—";
+      if (data.project.customer_id) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", data.project.customer_id)
+          .maybeSingle();
+        customerName = prof?.full_name || prof?.email || "—";
+      }
+      const { version, lastModified } = await syncVersion({
+        data: { projectId },
+      });
+      await generateSelectionsPdf({
+        projectName: data.project.name,
+        customerName,
+        address: data.project.address,
+        version,
+        lastModified,
+        options: options.map((o) => ({
+          id: o.id,
+          category: o.category,
+          customer_notes: o.customer_notes,
+          master_catalog: o.master_catalog,
+        })),
+      });
+      qc.invalidateQueries({ queryKey: ["admin-timeline", projectId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not export PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const move = (cat: string, index: number, dir: -1 | 1) => {
     const items = options.filter((o) => o.category === cat);
     const target = index + dir;
@@ -226,6 +285,9 @@ function ProjectDetail() {
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/admin/catalog"><Library className="h-4 w-4" /> Catalog</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={exporting || options.length === 0} onClick={handleExport}>
+                    <FileDown className="h-4 w-4" /> {exporting ? "Exporting…" : "Export Selections List"}
                   </Button>
                   <Button variant="hero" size="sm" onClick={() => setAddOpen(true)}>
                     <Plus className="h-4 w-4" /> Add from Catalog
