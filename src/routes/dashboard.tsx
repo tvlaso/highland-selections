@@ -187,7 +187,6 @@ function Dashboard() {
                   No options have been added yet.
                 </p>
               ) : (
-                <>
                   <div className="space-y-8">
                     {categoriesWithOptions.map((cat) => (
                       <div key={cat}>
@@ -199,14 +198,17 @@ function Dashboard() {
                             .filter((o) => o.category === cat)
                             .map((o) => {
                               const c = o.master_catalog;
-                              const selected = picked[cat] === o.id;
+                              const approved = o.status === "Approved";
+                              const changeRequested = o.status === "Change Requested";
                               return (
-                                <button
-                                  type="button"
+                                <div
                                   key={o.id}
-                                  onClick={() => setPicked((p) => ({ ...p, [cat]: o.id }))}
-                                  className={`overflow-hidden rounded-xl border bg-card text-left shadow-[var(--shadow-card)] transition-colors ${
-                                    selected ? "border-accent ring-2 ring-accent" : "border-border hover:border-accent"
+                                  className={`overflow-hidden rounded-xl border bg-card text-left shadow-[var(--shadow-card)] ${
+                                    approved
+                                      ? "border-success"
+                                      : changeRequested
+                                        ? "border-accent"
+                                        : "border-border"
                                   }`}
                                 >
                                   <div className="flex gap-3 p-3">
@@ -218,9 +220,17 @@ function Dashboard() {
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-start justify-between gap-2">
                                         <h4 className="font-semibold text-foreground">{c?.product_name}</h4>
-                                        {selected && (
+                                        {approved ? (
+                                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+                                            <Check className="h-3 w-3" /> Approved
+                                          </span>
+                                        ) : changeRequested ? (
                                           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
-                                            <Check className="h-3 w-3" /> Selected
+                                            <MessageSquare className="h-3 w-3" /> Change Requested
+                                          </span>
+                                        ) : (
+                                          <span className="inline-flex shrink-0 items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                                            Pending
                                           </span>
                                         )}
                                       </div>
@@ -242,25 +252,52 @@ function Dashboard() {
                                       )}
                                     </div>
                                   </div>
-                                </button>
+                                  <div className="border-t border-border p-3">
+                                    {changeRequested && o.customer_notes && (
+                                      <p className="mb-2 rounded-md bg-secondary px-3 py-2 text-sm text-muted-foreground">
+                                        Your note: {o.customer_notes}
+                                      </p>
+                                    )}
+                                    <Textarea
+                                      rows={2}
+                                      placeholder="Add a note for your contractor (optional)"
+                                      value={noteDrafts[o.id] ?? o.customer_notes ?? ""}
+                                      onChange={(e) =>
+                                        setNoteDrafts((p) => ({ ...p, [o.id]: e.target.value }))
+                                      }
+                                      className="mb-2"
+                                    />
+                                    <div className="flex flex-wrap gap-2">
+                                      <Button
+                                        variant="success"
+                                        size="sm"
+                                        disabled={approveMut.isPending}
+                                        onClick={() => approveMut.mutate(o.id)}
+                                      >
+                                        <Check className="h-4 w-4" /> Approve
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={changeMut.isPending}
+                                        onClick={() =>
+                                          changeMut.mutate({
+                                            id: o.id,
+                                            note: noteDrafts[o.id] ?? o.customer_notes ?? "",
+                                          })
+                                        }
+                                      >
+                                        <MessageSquare className="h-4 w-4" /> Request Change
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
                               );
                             })}
                         </div>
                       </div>
                     ))}
                   </div>
-
-                  <div className="sticky bottom-4 mt-8 flex justify-end">
-                    <Button
-                      variant="hero"
-                      size="lg"
-                      disabled={submitMut.isPending}
-                      onClick={() => submitMut.mutate()}
-                    >
-                      {submitMut.isPending ? "Submitting…" : "Submit Selections"}
-                    </Button>
-                  </div>
-                </>
               )}
             </section>
           </>
