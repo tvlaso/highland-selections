@@ -60,6 +60,8 @@ type OptionRow = {
   category: string;
   sort_order: number;
   is_selected: boolean;
+  status: string;
+  customer_notes: string | null;
   master_catalog: CatalogItem | null;
 };
 
@@ -246,15 +248,28 @@ function ProjectDetail() {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
                                   <h4 className="truncate font-semibold">{c?.product_name ?? "Unknown product"}</h4>
-                                  {o.is_selected && (
+                                  {o.status === "Approved" ? (
                                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-[oklch(0.45_0.13_150)]">
-                                      <Check className="h-3 w-3" /> Selected
+                                      <Check className="h-3 w-3" /> Approved
+                                    </span>
+                                  ) : o.status === "Change Requested" ? (
+                                    <span className="inline-flex shrink-0 items-center rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                                      Change Requested
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex shrink-0 items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                                      Pending
                                     </span>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {c?.vendor ? `${c.vendor} · ` : ""}{formatCurrency(c?.price)}
                                 </p>
+                                {o.status === "Change Requested" && o.customer_notes && (
+                                  <p className="mt-1 rounded-md bg-secondary px-2 py-1 text-sm text-muted-foreground">
+                                    Customer note: {o.customer_notes}
+                                  </p>
+                                )}
                                 {c?.product_url && (
                                   <a href={c.product_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
                                     Product <ExternalLink className="h-3 w-3" />
