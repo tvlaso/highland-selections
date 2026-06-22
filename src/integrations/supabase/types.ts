@@ -85,30 +85,36 @@ export type Database = {
           catalog_item_id: string
           category: string
           created_at: string
+          customer_notes: string | null
           id: string
           is_selected: boolean
           project_id: string
           sort_order: number
+          status: string
           updated_at: string
         }
         Insert: {
           catalog_item_id: string
           category: string
           created_at?: string
+          customer_notes?: string | null
           id?: string
           is_selected?: boolean
           project_id: string
           sort_order?: number
+          status?: string
           updated_at?: string
         }
         Update: {
           catalog_item_id?: string
           category?: string
           created_at?: string
+          customer_notes?: string | null
           id?: string
           is_selected?: boolean
           project_id?: string
           sort_order?: number
+          status?: string
           updated_at?: string
         }
         Relationships: [
