@@ -52,6 +52,16 @@ function AdminHome() {
     queryFn: () => listCustomersFn(),
   });
 
+  useEffect(() => {
+    if (customers.error) {
+      toast.error(
+        customers.error instanceof Error
+          ? customers.error.message
+          : "Could not load customers",
+      );
+    }
+  }, [customers.error]);
+
   const projects = useQuery({
     queryKey: ["admin-projects"],
     enabled: role === "admin",
