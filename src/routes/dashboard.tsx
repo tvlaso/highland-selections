@@ -83,32 +83,35 @@ function Dashboard() {
     },
   });
 
-  // local selection: category -> optionId
-  const [picked, setPicked] = useState<Record<string, string>>({});
-  useEffect(() => {
-    if (!data?.options) return;
-    const init: Record<string, string> = {};
-    for (const o of data.options) if (o.is_selected) init[o.category] = o.id;
-    setPicked(init);
-  }, [data?.options]);
+  // notes drafts when requesting a change: optionId -> note text
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
 
-  const submitMut = useMutation({
-    mutationFn: async () => {
-      const opts = data?.options ?? [];
-      for (const o of opts) {
-        const shouldSelect = picked[o.category] === o.id;
-        if (shouldSelect !== o.is_selected) {
-          const { error } = await supabase
-            .from("project_selection_options")
-            .update({ is_selected: shouldSelect })
-            .eq("id", o.id);
-          if (error) throw error;
-        }
-      }
+  const approveMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("project_selection_options")
+        .update({ status: "Approved", customer_notes: null })
+        .eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customer-data"] });
-      toast.success("Your selections have been submitted!");
+      toast.success("Selection approved!");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not approve"),
+  });
+
+  const changeMut = useMutation({
+    mutationFn: async ({ id, note }: { id: string; note: string }) => {
+      const { error } = await supabase
+        .from("project_selection_options")
+        .update({ status: "Change Requested", customer_notes: note || null })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customer-data"] });
+      toast.success("Change requested. Your contractor will be in touch.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not submit"),
   });
