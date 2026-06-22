@@ -406,6 +406,49 @@ function ProjectDetail() {
               </div>
             </section>
 
+            {/* Timeline */}
+            <section className="mt-10">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="flex items-center gap-2 text-lg font-semibold">
+                  <History className="h-5 w-5 text-accent" /> Timeline
+                </h2>
+                <div className="flex gap-1">
+                  {(["all", "selections"] as const).map((f) => (
+                    <Button
+                      key={f}
+                      variant={tlFilter === f ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setTlFilter(f)}
+                    >
+                      {f === "all" ? "All" : "Selections"}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                {(timeline.data ?? [])
+                  .filter((e) => tlFilter === "all" || e.category === tlFilter)
+                  .map((e) => (
+                    <div key={e.id} className="rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-sm">{e.title}</h3>
+                        <time className="shrink-0 text-xs text-muted-foreground">
+                          {new Date(e.created_at).toLocaleString()}
+                        </time>
+                      </div>
+                      {e.description && (
+                        <p className="mt-0.5 text-sm text-muted-foreground">{e.description}</p>
+                      )}
+                    </div>
+                  ))}
+                {(timeline.data ?? []).filter((e) => tlFilter === "all" || e.category === tlFilter).length === 0 && (
+                  <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">
+                    No timeline events yet.
+                  </p>
+                )}
+              </div>
+            </section>
+
             <AddFromCatalogDialog
               projectId={projectId}
               open={addOpen}
