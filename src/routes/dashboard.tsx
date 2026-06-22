@@ -180,7 +180,7 @@ function Dashboard() {
             <section className="mt-8">
               <h2 className="mb-1 text-lg font-semibold">Your Selections</h2>
               <p className="mb-4 text-sm text-muted-foreground">
-                Browse the options for each category and choose your preferred one.
+                Review each selection and approve it, or request a change with a note.
               </p>
               {options.length === 0 ? (
                 <p className="rounded-xl border border-border bg-card p-6 text-center text-muted-foreground">
