@@ -187,7 +187,7 @@ function Dashboard() {
       <AppHeader subtitle="My Project" />
       <main className="mx-auto max-w-5xl px-4 py-6">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">My Projects</h1>
+          <p className="text-2xl font-bold">My Projects</p>
           <StartProjectDialog
             onCreated={(id) => {
               setTab("current");
