@@ -14,6 +14,230 @@ export type Database = {
   }
   public: {
     Tables: {
+      design_comments: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          body: string
+          created_at: string
+          design_id: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string
+          body: string
+          created_at?: string
+          design_id: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          body?: string
+          created_at?: string
+          design_id?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_comments_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "design_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      design_files: {
+        Row: {
+          created_at: string
+          design_id: string
+          id: string
+          name: string
+          path: string
+        }
+        Insert: {
+          created_at?: string
+          design_id: string
+          id?: string
+          name?: string
+          path: string
+        }
+        Update: {
+          created_at?: string
+          design_id?: string
+          id?: string
+          name?: string
+          path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_files_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      design_photos: {
+        Row: {
+          created_at: string
+          design_id: string
+          id: string
+          path: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          design_id: string
+          id?: string
+          path: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          design_id?: string
+          id?: string
+          path?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_photos_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      design_products: {
+        Row: {
+          catalog_item_id: string
+          created_at: string
+          design_id: string
+          id: string
+        }
+        Insert: {
+          catalog_item_id: string
+          created_at?: string
+          design_id: string
+          id?: string
+        }
+        Update: {
+          catalog_item_id?: string
+          created_at?: string
+          design_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_products_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "master_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "design_products_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      design_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          design_id: string
+          id: string
+          label: string | null
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          design_id: string
+          id?: string
+          label?: string | null
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          design_id?: string
+          id?: string
+          label?: string | null
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_versions_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      designs: {
+        Row: {
+          category: string
+          cover_path: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          project_id: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cover_path?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cover_path?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "designs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       master_catalog: {
         Row: {
           active: boolean

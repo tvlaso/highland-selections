@@ -22,6 +22,7 @@ import {
   Pencil,
   ClipboardList,
 } from "lucide-react";
+import { Images } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
@@ -403,6 +404,11 @@ function ProjectDetail() {
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/admin/catalog"><Library className="h-4 w-4" /> Catalog</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin/designs/$projectId" params={{ projectId }}>
+                      <Images className="h-4 w-4" /> Designs
+                    </Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/admin/checklist/$projectId" params={{ projectId }}>
