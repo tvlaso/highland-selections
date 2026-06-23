@@ -39,7 +39,21 @@ export const submitProjectRequest = createServerFn({ method: "POST" })
       .object({
         projectType: z.enum(PROJECT_TYPE_VALUES),
         description: z.string().trim().min(1).max(5000),
-        address: z.string().trim().max(500).optional().nullable(),
+        fullName: z.string().trim().min(1, "Full name is required").max(200),
+        phone: z
+          .string()
+          .trim()
+          .min(1, "Phone number is required")
+          .max(40)
+          .refine(
+            (v) => {
+              const digits = v.replace(/\D/g, "");
+              return digits.length >= 10 && digits.length <= 15;
+            },
+            { message: "Enter a valid phone number" },
+          ),
+        email: z.string().trim().email("Enter a valid email address").max(255),
+        address: z.string().trim().min(1, "Project address is required").max(500),
         timeline: z.string().trim().max(200).optional().nullable(),
         budget: z.string().trim().max(200).optional().nullable(),
         contactMethod: z.string().trim().max(100).optional().nullable(),
@@ -61,13 +75,7 @@ export const submitProjectRequest = createServerFn({ method: "POST" })
 
     const photos = data.photos ?? [];
 
-    // Resolve customer name for a friendly project title
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", context.userId)
-      .maybeSingle();
-    const customerLabel = profile?.full_name || profile?.email || "New Customer";
+    const customerLabel = data.fullName || data.email || "New Customer";
 
     const { data: project, error } = await supabaseAdmin
       .from("projects")
@@ -75,7 +83,11 @@ export const submitProjectRequest = createServerFn({ method: "POST" })
         name: `${typeLabel[data.projectType]} — ${customerLabel}`,
         status: "New Request",
         customer_id: context.userId,
-        address: data.address || null,
+        address: data.address,
+        project_address: data.address,
+        customer_name: data.fullName,
+        customer_phone: data.phone,
+        customer_email: data.email,
         project_type: data.projectType,
         project_description: data.description,
         intake_timeline: data.timeline || null,
