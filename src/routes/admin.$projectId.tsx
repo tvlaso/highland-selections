@@ -188,13 +188,6 @@ function ProjectDetail() {
 
   const options = data?.options ?? [];
 
-  useEffect(() => {
-    if (data?.project) {
-      setDescDraft(data.project.project_description ?? "");
-      setTypeDraft(data.project.project_type ?? "");
-    }
-  }, [data?.project]);
-
   const timeline = useQuery({
     queryKey: ["admin-timeline", projectId],
     enabled: role === "admin",
