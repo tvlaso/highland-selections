@@ -29,6 +29,8 @@ import {
   CONTACT_METHODS,
   TIMELINE_OPTIONS,
   BUDGET_RANGES,
+  isValidEmail,
+  isValidPhone,
 } from "@/lib/constants";
 import {
   createIntakePhotoUpload,
@@ -50,6 +52,9 @@ export function StartProjectDialog({
   const [open, setOpen] = useState(false);
   const [projectType, setProjectType] = useState("");
   const [description, setDescription] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [timeline, setTimeline] = useState("");
   const [budget, setBudget] = useState("");
@@ -61,6 +66,9 @@ export function StartProjectDialog({
   const reset = () => {
     setProjectType("");
     setDescription("");
+    setFullName("");
+    setPhone("");
+    setEmail("");
     setAddress("");
     setTimeline("");
     setBudget("");
@@ -96,7 +104,10 @@ export function StartProjectDialog({
         data: {
           projectType: projectType as never,
           description,
-          address: address || null,
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          email: email.trim(),
+          address: address.trim(),
           timeline: timeline || null,
           budget: budget || null,
           contactMethod: contactMethod || null,
@@ -115,6 +126,11 @@ export function StartProjectDialog({
   });
 
   const valid = projectType !== "" && description.trim().length > 0;
+  const emailOk = isValidEmail(email);
+  const phoneOk = isValidPhone(phone);
+  const addressOk = address.trim().length > 0;
+  const nameOk = fullName.trim().length > 0;
+  const allValid = valid && emailOk && phoneOk && addressOk && nameOk;
 
   return (
     <Dialog
@@ -161,7 +177,47 @@ export function StartProjectDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Project Address</Label>
+            <Label>
+              Full Name <span className="text-destructive">*</span>
+            </Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>
+                Phone Number <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+              />
+              {phone.length > 0 && !phoneOk && (
+                <p className="text-xs text-destructive">Enter a valid phone number.</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label>
+                Email Address <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+              {email.length > 0 && !emailOk && (
+                <p className="text-xs text-destructive">Enter a valid email address.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>
+              Project Address <span className="text-destructive">*</span>
+            </Label>
             <Input value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
 
@@ -260,7 +316,7 @@ export function StartProjectDialog({
         <DialogFooter>
           <Button
             variant="hero"
-            disabled={mutation.isPending || uploading || !valid}
+            disabled={mutation.isPending || uploading || !allValid}
             onClick={() => mutation.mutate()}
           >
             {mutation.isPending ? "Submitting…" : "Submit Request"}

@@ -223,7 +223,10 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          customer_email: string | null
           customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
           id: string
           intake_budget: string | null
           intake_contact_method: string | null
@@ -231,6 +234,7 @@ export type Database = {
           intake_photos: string[]
           intake_timeline: string | null
           name: string
+          project_address: string | null
           project_description: string | null
           project_type: string | null
           selections_content_hash: string | null
@@ -243,7 +247,10 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          customer_email?: string | null
           customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           id?: string
           intake_budget?: string | null
           intake_contact_method?: string | null
@@ -251,6 +258,7 @@ export type Database = {
           intake_photos?: string[]
           intake_timeline?: string | null
           name: string
+          project_address?: string | null
           project_description?: string | null
           project_type?: string | null
           selections_content_hash?: string | null
@@ -263,7 +271,10 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          customer_email?: string | null
           customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           id?: string
           intake_budget?: string | null
           intake_contact_method?: string | null
@@ -271,6 +282,7 @@ export type Database = {
           intake_photos?: string[]
           intake_timeline?: string | null
           name?: string
+          project_address?: string | null
           project_description?: string | null
           project_type?: string | null
           selections_content_hash?: string | null
