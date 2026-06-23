@@ -435,7 +435,6 @@ function ProjectView({
                                 )}
                               </div>
                               {c?.vendor && <p className="text-sm text-muted-foreground">{c.vendor}</p>}
-                              <p className="text-sm font-medium text-foreground">{formatCurrency(c?.price)}</p>
                               {c?.description && (
                                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
                               )}
