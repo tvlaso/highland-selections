@@ -8,6 +8,8 @@ export type ExportCatalogItem = {
   vendor: string | null;
   image_url: string | null;
   product_url: string | null;
+  price?: number | null;
+  description?: string | null;
 };
 
 export type ExportOption = {
@@ -15,6 +17,7 @@ export type ExportOption = {
   category: string;
   customer_notes: string | null;
   master_catalog: ExportCatalogItem | null;
+  status?: string | null;
 };
 
 export type ExportArgs = {
@@ -218,4 +221,165 @@ export async function generateSelectionsPdf(args: ExportArgs) {
 
   const safe = projectName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
   doc.save(`selections-${safe}-v${version}.pdf`);
+}
+
+function money(value: number | null | undefined) {
+  if (value === null || value === undefined) return "—";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+export async function generatePmSpecPdf(args: ExportArgs) {
+  const { projectName, customerName, address, version, lastModified, options } = args;
+
+  const doc = new jsPDF({ unit: "pt", format: "letter" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 48;
+  const contentW = pageW - margin * 2;
+  const generatedAt = new Date().toLocaleString();
+
+  const navy: [number, number, number] = [23, 37, 64];
+  const orange: [number, number, number] = [214, 99, 38];
+  const gray: [number, number, number] = [110, 110, 110];
+
+  const footer = () => {
+    const y = pageH - 56;
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, y, pageW - margin, y);
+    doc.setFontSize(8);
+    doc.setTextColor(...gray);
+    doc.text(
+      [
+        `Highland Remodeling   •   PM Specification   •   Project: ${projectName}   •   V${version}`,
+        `Generated: ${generatedAt}`,
+        "INTERNAL DOCUMENT — Not for customer distribution.",
+      ],
+      margin,
+      y + 14,
+    );
+  };
+
+  const logoImg = await urlToDataUrl(logo.url);
+  let y = margin;
+  if (logoImg) {
+    const lw = 150;
+    const lh = (logoImg.h / logoImg.w) * lw;
+    doc.addImage(logoImg.data, "PNG", margin, y, lw, lh);
+    y += lh + 12;
+  } else {
+    doc.setFontSize(20);
+    doc.setTextColor(...navy);
+    doc.text("Highland Remodeling", margin, y + 16);
+    y += 32;
+  }
+
+  doc.setFontSize(18);
+  doc.setTextColor(...navy);
+  doc.text("PM Specification Sheet", margin, y + 6);
+  y += 22;
+
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  [
+    `Project: ${projectName}`,
+    `Customer: ${customerName}`,
+    `Address: ${address || "—"}`,
+    `Version: V${version}`,
+    `Last Modified: ${fmt(lastModified)}`,
+    `Generated: ${generatedAt}`,
+  ].forEach((line) => {
+    y += 14;
+    doc.text(line, margin, y);
+  });
+  y += 18;
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > pageH - 72) {
+      footer();
+      doc.addPage();
+      y = margin;
+    }
+  };
+
+  const ordered = CATEGORIES.filter((cat) => options.some((o) => o.category === cat));
+  for (const cat of ordered) {
+    const items = options.filter((o) => o.category === cat);
+    ensureSpace(40);
+    doc.setFillColor(...orange);
+    doc.rect(margin, y - 2, 4, 16, "F");
+    doc.setFontSize(13);
+    doc.setTextColor(...navy);
+    doc.text(cat.toUpperCase(), margin + 12, y + 11);
+    y += 26;
+
+    for (const o of items) {
+      const c = o.master_catalog;
+      ensureSpace(72);
+      const top = y;
+      const imgSize = 56;
+
+      const photo = await loadPhoto(c?.image_url);
+      if (photo) {
+        try {
+          doc.addImage(photo.data, "JPEG", margin, top, imgSize, imgSize);
+        } catch {
+          doc.addImage(photo.data, "PNG", margin, top, imgSize, imgSize);
+        }
+      } else {
+        doc.setFillColor(238, 238, 238);
+        doc.rect(margin, top, imgSize, imgSize, "F");
+      }
+
+      const tx = margin + imgSize + 14;
+      const tw = contentW - imgSize - 14;
+      let ty = top + 11;
+
+      doc.setFontSize(11);
+      doc.setTextColor(20, 20, 20);
+      doc.text(c?.product_name ?? "Unknown product", tx, ty);
+      ty += 13;
+
+      doc.setFontSize(9);
+      doc.setTextColor(...gray);
+      doc.text(
+        `Vendor: ${c?.vendor || "—"}    Price: ${money(c?.price)}    Status: ${o.status || "Pending"}`,
+        tx,
+        ty,
+      );
+      ty += 12;
+
+      if (c?.product_url) {
+        doc.setTextColor(...orange);
+        doc.textWithLink("Manufacturer PDF / Product Link", tx, ty, { url: c.product_url });
+        ty += 12;
+      }
+
+      if (o.customer_notes) {
+        doc.setTextColor(70, 70, 70);
+        const notes = doc.splitTextToSize(`Notes: ${o.customer_notes}`, tw);
+        doc.text(notes, tx, ty);
+        ty += notes.length * 10;
+      }
+
+      y = Math.max(top + imgSize, ty) + 10;
+      doc.setDrawColor(235, 235, 235);
+      doc.line(margin, y - 6, pageW - margin, y - 6);
+    }
+    y += 6;
+  }
+
+  if (ordered.length === 0) {
+    doc.setFontSize(11);
+    doc.setTextColor(...gray);
+    doc.text("No selections have been added yet.", margin, y + 10);
+  }
+
+  footer();
+
+  const safe = projectName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  doc.save(`pm-spec-${safe}-v${version}.pdf`);
 }
