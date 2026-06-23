@@ -851,7 +851,7 @@ function EditCustomerInfoDialog({
             disabled={saveMut.isPending || !emailOk || !phoneOk}
             onClick={() => saveMut.mutate()}
           >
-            {saveMut.isPending ? "Saving…" : "Save Customer Info"}
+            {saveMut.isPending ? "Saving…" : "Save Banner Details"}
           </Button>
         </DialogFooter>
       </DialogContent>
