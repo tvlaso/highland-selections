@@ -29,23 +29,29 @@ import { createProductPhotoUpload } from "@/lib/admin.functions";
 
 export interface EditableCatalogItem {
   id?: string;
+  brand: string | null;
   product_name: string;
   category: string;
   vendor: string | null;
   price: number | null;
   image_url: string | null;
   product_url: string | null;
+  sku: string | null;
+  finish: string | null;
   description: string | null;
   active: boolean;
 }
 
 const blank = (): EditableCatalogItem => ({
+  brand: null,
   product_name: "",
   category: CATEGORIES[0],
   vendor: null,
   price: null,
   image_url: null,
   product_url: null,
+  sku: null,
+  finish: null,
   description: null,
   active: true,
 });
@@ -91,12 +97,15 @@ export function CatalogDialog({
   const mutation = useMutation({
     mutationFn: async () => {
       const payload = {
+        brand: form.brand || null,
         product_name: form.product_name,
         category: form.category,
         vendor: form.vendor || null,
         price: form.price,
         image_url: form.image_url,
         product_url: form.product_url || null,
+        sku: form.sku || null,
+        finish: form.finish || null,
         description: form.description || null,
         active: form.active,
       };
