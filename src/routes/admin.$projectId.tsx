@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, PROJECT_STATUSES, PROJECT_TYPES, formatCurrency, isValidEmail, isValidPhone } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
-import { generateSelectionsPdf, generatePmSpecPdf } from "@/lib/exportSelectionsPdf";
+import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 import { listCustomers } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/$projectId")({
@@ -88,7 +88,6 @@ function ProjectDetail() {
   const syncVersion = useServerFn(syncSelectionsVersion);
   const listCustomersFn = useServerFn(listCustomers);
   const [exporting, setExporting] = useState(false);
-  const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
   const [custOpen, setCustOpen] = useState(false);
 
@@ -287,52 +286,6 @@ function ProjectDetail() {
     }
   };
 
-  const resolveCustomerName = async () => {
-    if (!data?.project?.customer_id) return "—";
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", data.project.customer_id)
-      .maybeSingle();
-    return prof?.full_name || prof?.email || "—";
-  };
-
-  const handleExportPm = async () => {
-    if (!data?.project) return;
-    setExportingPm(true);
-    try {
-      const customerName = await resolveCustomerName();
-      const { version, lastModified } = await syncVersion({ data: { projectId } });
-      await generatePmSpecPdf({
-        projectName: data.project.name,
-        customerName,
-        address: data.project.address,
-        version,
-        lastModified,
-        options: options.map((o) => ({
-          id: o.id,
-          category: o.category,
-          customer_notes: o.customer_notes,
-          status: o.status,
-          master_catalog: o.master_catalog
-            ? {
-                product_name: o.master_catalog.product_name,
-                vendor: o.master_catalog.vendor,
-                image_url: o.master_catalog.image_url,
-                product_url: o.master_catalog.product_url,
-                price: o.master_catalog.price,
-                description: o.master_catalog.description,
-              }
-            : null,
-        })),
-      });
-      qc.invalidateQueries({ queryKey: ["admin-timeline", projectId] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not export PDF");
-    } finally {
-      setExportingPm(false);
-    }
-  };
 
   const move = (cat: string, index: number, dir: -1 | 1) => {
     const items = options.filter((o) => o.category === cat);
@@ -458,9 +411,6 @@ function ProjectDetail() {
                   </Button>
                   <Button variant="outline" size="sm" disabled={exporting || options.length === 0} onClick={handleExport}>
                     <FileDown className="h-4 w-4" /> {exporting ? "Exporting…" : "Export Selections List"}
-                  </Button>
-                  <Button variant="outline" size="sm" disabled={exportingPm || options.length === 0} onClick={handleExportPm}>
-                    <FileDown className="h-4 w-4" /> {exportingPm ? "Exporting…" : "PM Specification PDF"}
                   </Button>
                   <Button variant="hero" size="sm" onClick={() => setAddOpen(true)}>
                     <Plus className="h-4 w-4" /> Add from Catalog
