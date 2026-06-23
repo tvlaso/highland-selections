@@ -115,7 +115,6 @@ function Dashboard() {
     },
   });
 
-  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const options = data?.options ?? [];
 
   const handleExport = async () => {
