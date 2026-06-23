@@ -378,13 +378,23 @@ function AdminHome() {
         <div className="mt-6">
           {projects.isLoading ? (
             <p className="text-muted-foreground">Loading…</p>
-          ) : allProjects.length === 0 ? (
+          ) : (
+            <>
+              {requestProjects.length > 0 && (
+                <section className="mb-8">
+                  <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
+                    <Inbox className="h-5 w-5 text-accent" /> New Project Requests ({requestProjects.length})
+                  </h2>
+                  <div className="space-y-3">{requestProjects.map(renderRequest)}</div>
+                </section>
+              )}
+              {allProjects.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
               <FolderKanban className="mx-auto h-10 w-10 text-muted-foreground/50" />
               <p className="mt-3 font-medium">No projects yet</p>
               <p className="text-sm text-muted-foreground">Create a customer, then a project to get started.</p>
             </div>
-          ) : (
+              ) : (
             <Tabs defaultValue="current">
               <TabsList>
                 <TabsTrigger value="current">Current Projects ({currentProjects.length})</TabsTrigger>
@@ -409,6 +419,8 @@ function AdminHome() {
                 )}
               </TabsContent>
             </Tabs>
+              )}
+            </>
           )}
         </div>
       </main>
