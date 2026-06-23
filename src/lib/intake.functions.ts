@@ -39,20 +39,6 @@ export const submitProjectRequest = createServerFn({ method: "POST" })
       .object({
         projectType: z.enum(PROJECT_TYPE_VALUES),
         description: z.string().trim().min(1).max(5000),
-        fullName: z.string().trim().min(1, "Full name is required").max(200),
-        phone: z
-          .string()
-          .trim()
-          .min(1, "Phone number is required")
-          .max(40)
-          .refine(
-            (v) => {
-              const digits = v.replace(/\D/g, "");
-              return digits.length >= 10 && digits.length <= 15;
-            },
-            { message: "Enter a valid phone number" },
-          ),
-        email: z.string().trim().email("Enter a valid email address").max(255),
         address: z.string().trim().min(1, "Project address is required").max(500),
         timeline: z.string().trim().max(200).optional().nullable(),
         budget: z.string().trim().max(200).optional().nullable(),
@@ -75,17 +61,17 @@ export const submitProjectRequest = createServerFn({ method: "POST" })
 
     const photos = data.photos ?? [];
 
-    const customerLabel = data.fullName || data.email || "New Customer";
-
-    // Keep the customer's profile in sync with the latest contact details.
-    await supabaseAdmin
+    // Customer contact info comes from the logged-in customer's profile.
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .update({
-        full_name: data.fullName,
-        phone: data.phone,
-        address: data.address,
-      })
-      .eq("id", context.userId);
+      .select("full_name, email, phone")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    const customerName = profile?.full_name ?? null;
+    const customerPhone = profile?.phone ?? null;
+    const customerEmail = profile?.email ?? null;
+    const customerLabel = customerName || customerEmail || "New Customer";
 
     const { data: project, error } = await supabaseAdmin
       .from("projects")
@@ -95,9 +81,9 @@ export const submitProjectRequest = createServerFn({ method: "POST" })
         customer_id: context.userId,
         address: data.address,
         project_address: data.address,
-        customer_name: data.fullName,
-        customer_phone: data.phone,
-        customer_email: data.email,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: customerEmail,
         project_type: data.projectType,
         project_description: data.description,
         intake_timeline: data.timeline || null,

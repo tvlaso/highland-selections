@@ -26,11 +26,7 @@ import {
 import { SignedImage } from "@/components/SignedImage";
 import {
   PROJECT_TYPES,
-  CONTACT_METHODS,
   TIMELINE_OPTIONS,
-  BUDGET_RANGES,
-  isValidEmail,
-  isValidPhone,
 } from "@/lib/constants";
 import {
   createIntakePhotoUpload,
@@ -52,13 +48,8 @@ export function StartProjectDialog({
   const [open, setOpen] = useState(false);
   const [projectType, setProjectType] = useState("");
   const [description, setDescription] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [timeline, setTimeline] = useState("");
-  const [budget, setBudget] = useState("");
-  const [contactMethod, setContactMethod] = useState("");
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -66,13 +57,8 @@ export function StartProjectDialog({
   const reset = () => {
     setProjectType("");
     setDescription("");
-    setFullName("");
-    setPhone("");
-    setEmail("");
     setAddress("");
     setTimeline("");
-    setBudget("");
-    setContactMethod("");
     setNotes("");
     setPhotos([]);
   };
@@ -104,13 +90,10 @@ export function StartProjectDialog({
         data: {
           projectType: projectType as never,
           description,
-          fullName: fullName.trim(),
-          phone: phone.trim(),
-          email: email.trim(),
           address: address.trim(),
           timeline: timeline || null,
-          budget: budget || null,
-          contactMethod: contactMethod || null,
+          budget: null,
+          contactMethod: null,
           notes: notes || null,
           photos,
         },
@@ -126,11 +109,8 @@ export function StartProjectDialog({
   });
 
   const valid = projectType !== "" && description.trim().length > 0;
-  const emailOk = isValidEmail(email);
-  const phoneOk = isValidPhone(phone);
   const addressOk = address.trim().length > 0;
-  const nameOk = fullName.trim().length > 0;
-  const allValid = valid && emailOk && phoneOk && addressOk && nameOk;
+  const allValid = valid && addressOk;
 
   return (
     <Dialog
