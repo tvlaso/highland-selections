@@ -89,8 +89,6 @@ function ProjectDetail() {
   const [exporting, setExporting] = useState(false);
   const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
-  const [descDraft, setDescDraft] = useState("");
-  const [typeDraft, setTypeDraft] = useState("");
   const [custOpen, setCustOpen] = useState(false);
 
   const customers = useQuery({
@@ -124,26 +122,6 @@ function ProjectDetail() {
         updates: updates ?? [],
       };
     },
-  });
-
-  const statusMut = useMutation({
-    mutationFn: async (status: string) => {
-      const { error } = await supabase.from("projects").update({ status }).eq("id", projectId);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
-  });
-
-  const detailsMut = useMutation({
-    mutationFn: async (patch: { project_type?: string | null; project_description?: string | null }) => {
-      const { error } = await supabase.from("projects").update(patch).eq("id", projectId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
-      toast.success("Project details saved");
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
   const removeMut = useMutation({
@@ -209,13 +187,6 @@ function ProjectDetail() {
   const [addOpen, setAddOpen] = useState(false);
 
   const options = data?.options ?? [];
-
-  useEffect(() => {
-    if (data?.project) {
-      setDescDraft(data.project.project_description ?? "");
-      setTypeDraft(data.project.project_type ?? "");
-    }
-  }, [data?.project]);
 
   const timeline = useQuery({
     queryKey: ["admin-timeline", projectId],
@@ -366,7 +337,7 @@ function ProjectDetail() {
                   className="shrink-0 bg-card text-foreground"
                   onClick={() => setCustOpen(true)}
                 >
-                  <Pencil className="h-4 w-4" /> Edit Customer Info
+                  <Pencil className="h-4 w-4" /> Edit Banner Details
                 </Button>
               </div>
 
@@ -391,14 +362,9 @@ function ProjectDetail() {
                 </p>
               )}
 
-              <div className="mt-4 flex items-center gap-2">
-                <span className="text-sm text-[oklch(0.88_0.02_255)]">Status:</span>
-                <Select value={project.status} onValueChange={(v) => statusMut.mutate(v)}>
-                  <SelectTrigger className="h-8 w-44 bg-card text-foreground"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {PROJECT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <div className="mt-4 flex items-center gap-2 text-sm text-[oklch(0.92_0.02_255)]">
+                <span className="text-[oklch(0.88_0.02_255)]">Status:</span>
+                <span className="rounded-full bg-card px-3 py-0.5 font-medium text-foreground">{project.status}</span>
               </div>
             </section>
 
@@ -414,55 +380,16 @@ function ProjectDetail() {
               }}
             />
 
-            {/* Project type & description */}
-            <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-              <h2 className="mb-3 text-lg font-semibold">Job Details</h2>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label>Project Type</Label>
-                  <Select value={typeDraft} onValueChange={setTypeDraft}>
-                    <SelectTrigger className="w-56"><SelectValue placeholder="Select a type" /></SelectTrigger>
-                    <SelectContent>
-                      {PROJECT_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {Array.isArray(project.intake_photos) && project.intake_photos.length > 0 && (
+              <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+                <h2 className="mb-3 text-lg font-semibold">Intake / Inspiration Photos</h2>
+                <div className="flex flex-wrap gap-2">
+                  {project.intake_photos.map((path: string) => (
+                    <EnlargeableImage key={path} path={path} alt="inspiration" className="h-20 w-20 rounded-lg" />
+                  ))}
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Project Description</Label>
-                  <Textarea
-                    rows={4}
-                    value={descDraft}
-                    onChange={(e) => setDescDraft(e.target.value)}
-                    placeholder="Describe the job…"
-                  />
-                </div>
-                <Button
-                  variant="hero"
-                  size="sm"
-                  disabled={detailsMut.isPending}
-                  onClick={() =>
-                    detailsMut.mutate({
-                      project_type: typeDraft || null,
-                      project_description: descDraft || null,
-                    })
-                  }
-                >
-                  Save Job Details
-                </Button>
-              </div>
-              {Array.isArray(project.intake_photos) && project.intake_photos.length > 0 && (
-                <div className="mt-4">
-                  <Label>Intake / Inspiration Photos</Label>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {project.intake_photos.map((path: string) => (
-                      <EnlargeableImage key={path} path={path} alt="inspiration" className="h-20 w-20 rounded-lg" />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
+              </section>
+            )}
 
             {/* Selection options */}
             <section className="mt-8">
@@ -754,6 +681,9 @@ type ProjectCustomerInfo = {
   customer_email: string | null;
   project_address: string | null;
   address: string | null;
+  project_type: string | null;
+  project_description: string | null;
+  status: string;
 };
 
 function EditCustomerInfoDialog({
@@ -777,6 +707,9 @@ function EditCustomerInfoDialog({
   const [phone, setPhone] = useState(project.customer_phone ?? "");
   const [email, setEmail] = useState(project.customer_email ?? "");
   const [address, setAddress] = useState(project.project_address ?? project.address ?? "");
+  const [type, setType] = useState(project.project_type ?? "");
+  const [description, setDescription] = useState(project.project_description ?? "");
+  const [status, setStatus] = useState(project.status);
 
   useEffect(() => {
     if (open) {
@@ -785,6 +718,9 @@ function EditCustomerInfoDialog({
       setPhone(project.customer_phone ?? "");
       setEmail(project.customer_email ?? "");
       setAddress(project.project_address ?? project.address ?? "");
+      setType(project.project_type ?? "");
+      setDescription(project.project_description ?? "");
+      setStatus(project.status);
     }
   }, [open, project]);
 
@@ -802,14 +738,17 @@ function EditCustomerInfoDialog({
           customer_email: email.trim() || null,
           project_address: address.trim() || null,
           address: address.trim() || null,
+          project_type: type || null,
+          project_description: description.trim() || null,
+          status,
         })
         .eq("id", projectId);
       if (error) throw error;
 
       const events: { title: string; description: string }[] = [
         {
-          title: "Customer information updated",
-          description: "An admin updated the customer contact details for this project",
+          title: "Banner details updated",
+          description: "An admin updated the project and customer details for this project",
         },
       ];
       if (customerChanged) {
@@ -846,9 +785,33 @@ function EditCustomerInfoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Customer Info</DialogTitle>
+          <DialogTitle>Edit Banner Details</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Project Type</Label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+              <SelectContent>
+                {PROJECT_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Job Description</Label>
+            <Textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the job…" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Project Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PROJECT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <Label>Assigned Customer</Label>
             <Select value={customerId} onValueChange={setCustomerId}>
@@ -888,7 +851,7 @@ function EditCustomerInfoDialog({
             disabled={saveMut.isPending || !emailOk || !phoneOk}
             onClick={() => saveMut.mutate()}
           >
-            {saveMut.isPending ? "Saving…" : "Save Customer Info"}
+            {saveMut.isPending ? "Saving…" : "Save Banner Details"}
           </Button>
         </DialogFooter>
       </DialogContent>
