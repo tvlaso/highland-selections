@@ -12,7 +12,6 @@ import { EnlargeableImage } from "@/components/EnlargeableImage";
 import { SelectionNotes } from "@/components/SelectionNotes";
 import { StartProjectDialog } from "@/components/StartProjectDialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CATEGORIES, formatCurrency, projectTypeLabel } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
@@ -115,7 +114,6 @@ function Dashboard() {
     },
   });
 
-  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const options = data?.options ?? [];
 
   const handleExport = async () => {
@@ -164,10 +162,10 @@ function Dashboard() {
   });
 
   const changeMut = useMutation({
-    mutationFn: async ({ id, note }: { id: string; note: string }) => {
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("project_selection_options")
-        .update({ status: "Change Requested", customer_notes: note || null })
+        .update({ status: "Change Requested" })
         .eq("id", id);
       if (error) throw error;
     },
@@ -251,8 +249,6 @@ function Dashboard() {
                         categoriesWithOptions={categoriesWithOptions}
                         exporting={exporting}
                         onExport={handleExport}
-                        noteDrafts={noteDrafts}
-                        setNoteDrafts={setNoteDrafts}
                         approveMut={approveMut}
                         changeMut={changeMut}
                       />
@@ -278,8 +274,6 @@ function ProjectView({
   categoriesWithOptions,
   exporting,
   onExport,
-  noteDrafts,
-  setNoteDrafts,
   approveMut,
   changeMut,
 }: {
@@ -304,10 +298,8 @@ function ProjectView({
   categoriesWithOptions: readonly string[];
   exporting: boolean;
   onExport: () => void;
-  noteDrafts: Record<string, string>;
-  setNoteDrafts: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   approveMut: ReturnType<typeof useMutation<void, Error, string>>;
-  changeMut: ReturnType<typeof useMutation<void, Error, { id: string; note: string }>>;
+  changeMut: ReturnType<typeof useMutation<void, Error, string>>;
 }) {
   return (
     <>
@@ -464,12 +456,6 @@ function ProjectView({
                             <SelectionNotes optionId={o.id} projectId={project.id} readOnly={isCompleted} />
                             {!isCompleted && (
                               <div className="space-y-2 border-t border-border pt-3">
-                                <Textarea
-                                  rows={2}
-                                  placeholder="Add a note for your contractor (optional)"
-                                  value={noteDrafts[o.id] ?? o.customer_notes ?? ""}
-                                  onChange={(e) => setNoteDrafts((p) => ({ ...p, [o.id]: e.target.value }))}
-                                />
                                 <div className="flex flex-wrap gap-2">
                                   <Button
                                     variant="success"
@@ -483,9 +469,7 @@ function ProjectView({
                                     variant="outline"
                                     size="sm"
                                     disabled={changeMut.isPending}
-                                    onClick={() =>
-                                      changeMut.mutate({ id: o.id, note: noteDrafts[o.id] ?? o.customer_notes ?? "" })
-                                    }
+                                    onClick={() => changeMut.mutate(o.id)}
                                   >
                                     <MessageSquare className="h-4 w-4" /> Request Change
                                   </Button>
