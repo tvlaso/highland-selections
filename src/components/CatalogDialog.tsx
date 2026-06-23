@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Upload, Star, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SignedImage } from "@/components/SignedImage";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ export interface EditableCatalogItem {
   vendor: string | null;
   price: number | null;
   image_url: string | null;
+  images: string[];
   product_url: string | null;
   product_link: string | null;
   sku: string | null;
@@ -50,6 +51,7 @@ const blank = (): EditableCatalogItem => ({
   vendor: null,
   price: null,
   image_url: null,
+  images: [],
   product_url: null,
   product_link: null,
   sku: null,
@@ -74,27 +76,62 @@ export function CatalogDialog({
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(existing ? { ...existing } : blank());
+    if (open) {
+      if (existing) {
+        // Ensure the gallery includes the legacy cover image for older items
+        const imgs = existing.images?.length
+          ? existing.images
+          : existing.image_url
+            ? [existing.image_url]
+            : [];
+        setForm({ ...existing, images: imgs });
+      } else {
+        setForm(blank());
+      }
+    }
   }, [open, existing]);
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (files: FileList | File[]) => {
+    const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (arr.length === 0) return;
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `catalog/${crypto.randomUUID()}.${ext}`;
-      const upload = await createUpload({ data: { path } });
-      const { error } = await supabase.storage.from("product-photos").uploadToSignedUrl(path, upload.token, file, {
-        contentType: file.type || "image/jpeg",
+      const uploaded: string[] = [];
+      for (const file of arr) {
+        const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const path = `catalog/${crypto.randomUUID()}.${ext}`;
+        const upload = await createUpload({ data: { path } });
+        const { error } = await supabase.storage.from("product-photos").uploadToSignedUrl(path, upload.token, file, {
+          contentType: file.type || "image/jpeg",
+        });
+        if (error) throw error;
+        uploaded.push(path);
+      }
+      setForm((f) => {
+        const images = [...f.images, ...uploaded];
+        return { ...f, images, image_url: f.image_url ?? images[0] ?? null };
       });
-      if (error) throw error;
-      setForm((f) => ({ ...f, image_url: path }));
-      toast.success("Photo uploaded");
+      toast.success(`${uploaded.length} photo${uploaded.length > 1 ? "s" : ""} uploaded`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
     }
   };
+
+  const removeImage = (path: string) =>
+    setForm((f) => {
+      const images = f.images.filter((p) => p !== path);
+      const image_url = f.image_url === path ? (images[0] ?? null) : f.image_url;
+      return { ...f, images, image_url };
+    });
+
+  const setCover = (path: string) =>
+    setForm((f) => ({
+      ...f,
+      image_url: path,
+      images: [path, ...f.images.filter((p) => p !== path)],
+    }));
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -104,7 +141,8 @@ export function CatalogDialog({
         category: form.category,
         vendor: form.vendor || null,
         price: form.price,
-        image_url: form.image_url,
+        image_url: form.image_url ?? form.images[0] ?? null,
+        images: form.images,
         product_url: form.product_url || null,
         product_link: form.product_link || null,
         sku: form.sku || null,
@@ -169,23 +207,56 @@ export function CatalogDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Product photo</Label>
-            <div className="flex items-center gap-3">
-              <SignedImage path={form.image_url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUpload(f);
-                }}
-              />
-              <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
-                <Upload className="h-4 w-4" /> {uploading ? "Uploading…" : "Upload"}
-              </Button>
-            </div>
+            <Label>Product photos</Label>
+            {form.images.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {form.images.map((path) => {
+                  const isCover = (form.image_url ?? form.images[0]) === path;
+                  return (
+                    <div key={path} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border">
+                      <SignedImage path={path} alt="preview" className="h-full w-full object-cover" />
+                      {isCover && (
+                        <span className="absolute left-1 top-1 rounded bg-accent px-1 text-[10px] font-semibold text-accent-foreground">
+                          Cover
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        title="Remove"
+                        onClick={() => removeImage(path)}
+                        className="absolute right-1 top-1 rounded-full bg-background/90 p-0.5 text-destructive opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                      {!isCover && (
+                        <button
+                          type="button"
+                          title="Set as cover"
+                          onClick={() => setCover(path)}
+                          className="absolute bottom-1 right-1 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
+                        >
+                          <Star className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) handleUpload(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
+              <Upload className="h-4 w-4" /> {uploading ? "Uploading…" : "Add photos"}
+            </Button>
           </div>
           <div className="space-y-1.5">
             <Label>Manufacturer PDF</Label>

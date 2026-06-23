@@ -8,7 +8,7 @@ import { User, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
-import { EnlargeableImage } from "@/components/EnlargeableImage";
+import { ImageGallery } from "@/components/ImageGallery";
 import { SelectionNotes } from "@/components/SelectionNotes";
 import { StartProjectDialog } from "@/components/StartProjectDialog";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ type CatalogItem = {
   vendor: string | null;
   price: number | null;
   image_url: string | null;
+  images: string[] | null;
   product_url: string | null;
   description: string | null;
 };
@@ -420,8 +421,8 @@ function ProjectView({
                           }`}
                         >
                           <div className="flex gap-3 p-3">
-                            <EnlargeableImage
-                              path={c?.image_url ?? null}
+                            <ImageGallery
+                              images={c?.images?.length ? c.images : [c?.image_url ?? null]}
                               alt={c?.product_name ?? ""}
                               className="h-24 w-24 shrink-0 rounded-lg"
                             />

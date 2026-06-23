@@ -248,6 +248,7 @@ export type Database = {
           finish: string | null
           id: string
           image_url: string | null
+          images: string[]
           price: number | null
           product_link: string | null
           product_name: string
@@ -265,6 +266,7 @@ export type Database = {
           finish?: string | null
           id?: string
           image_url?: string | null
+          images?: string[]
           price?: number | null
           product_link?: string | null
           product_name: string
@@ -282,6 +284,7 @@ export type Database = {
           finish?: string | null
           id?: string
           image_url?: string | null
+          images?: string[]
           price?: number | null
           product_link?: string | null
           product_name?: string
