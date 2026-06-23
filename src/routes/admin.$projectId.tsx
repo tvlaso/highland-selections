@@ -22,6 +22,7 @@ import {
   Pencil,
   ClipboardList,
 } from "lucide-react";
+import { Images } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
