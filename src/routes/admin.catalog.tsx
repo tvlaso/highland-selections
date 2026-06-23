@@ -6,7 +6,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
-import { SignedImage } from "@/components/SignedImage";
+import { EnlargeableImage } from "@/components/EnlargeableImage";
 import { CatalogDialog, type EditableCatalogItem } from "@/components/CatalogDialog";
 import { Button } from "@/components/ui/button";
 import { CATEGORIES, formatCurrency } from "@/lib/constants";
