@@ -270,6 +270,7 @@ function Dashboard() {
 
 function ProjectView({
   project,
+  fallbackEmail,
   isCompleted,
   isLoading,
   updates,
@@ -295,6 +296,7 @@ function ProjectView({
     customer_phone?: string | null;
     customer_email?: string | null;
   };
+  fallbackEmail: string | null;
   isCompleted: boolean;
   isLoading: boolean;
   updates: { id: string; title: string; body: string | null; created_at: string }[];
