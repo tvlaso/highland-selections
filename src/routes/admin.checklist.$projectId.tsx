@@ -362,12 +362,3 @@ function ChecklistCard({
     </div>
   );
 }
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/admin/checklist/$projectId')({
-  component: RouteComponent,
-})
-
-function RouteComponent() {
-  return <div>Hello "/admin/checklist/$projectId"!</div>
-}
