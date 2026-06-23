@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { MapPin, Calendar, Megaphone, ExternalLink, Check, MessageSquare, FileDown, ChevronRight, Plus } from "lucide-react";
+import { MapPin, Calendar, Megaphone, ExternalLink, Check, MessageSquare, FileDown, ChevronRight, Plus, Images } from "lucide-react";
 import { User, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -349,6 +349,14 @@ function ProjectView({
           This project is complete. Your selections are shown here for reference (read-only).
         </p>
       )}
+
+      <div className="mt-4">
+        <Button variant="outline" asChild>
+          <Link to="/designs/$projectId" params={{ projectId: project.id }}>
+            <Images className="h-4 w-4" /> View Designs
+          </Link>
+        </Button>
+      </div>
 
       {updates.length > 0 && (
         <section className="mt-6">
