@@ -366,7 +366,7 @@ function ProjectDetail() {
                   className="shrink-0 bg-card text-foreground"
                   onClick={() => setCustOpen(true)}
                 >
-                  <Pencil className="h-4 w-4" /> Edit Customer Info
+                  <Pencil className="h-4 w-4" /> Edit Banner Details
                 </Button>
               </div>
 
@@ -391,14 +391,9 @@ function ProjectDetail() {
                 </p>
               )}
 
-              <div className="mt-4 flex items-center gap-2">
-                <span className="text-sm text-[oklch(0.88_0.02_255)]">Status:</span>
-                <Select value={project.status} onValueChange={(v) => statusMut.mutate(v)}>
-                  <SelectTrigger className="h-8 w-44 bg-card text-foreground"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {PROJECT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <div className="mt-4 flex items-center gap-2 text-sm text-[oklch(0.92_0.02_255)]">
+                <span className="text-[oklch(0.88_0.02_255)]">Status:</span>
+                <span className="rounded-full bg-card px-3 py-0.5 font-medium text-foreground">{project.status}</span>
               </div>
             </section>
 
