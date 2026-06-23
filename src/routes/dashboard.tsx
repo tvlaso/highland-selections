@@ -243,6 +243,7 @@ function Dashboard() {
                     {project && (
                       <ProjectView
                         project={project}
+                        fallbackEmail={session?.user?.email ?? null}
                         isCompleted={isCompleted}
                         isLoading={isLoading}
                         updates={data?.updates ?? []}
