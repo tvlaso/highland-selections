@@ -3,16 +3,17 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { MapPin, Calendar, Megaphone, ExternalLink, Check, MessageSquare, FileDown, ChevronRight } from "lucide-react";
+import { MapPin, Calendar, Megaphone, ExternalLink, Check, MessageSquare, FileDown, ChevronRight, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
 import { EnlargeableImage } from "@/components/EnlargeableImage";
 import { SelectionNotes } from "@/components/SelectionNotes";
+import { StartProjectDialog } from "@/components/StartProjectDialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CATEGORIES, formatCurrency } from "@/lib/constants";
+import { CATEGORIES, formatCurrency, projectTypeLabel } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
 import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 
@@ -185,13 +186,27 @@ function Dashboard() {
     <div className="min-h-screen bg-background">
       <AppHeader subtitle="My Project" />
       <main className="mx-auto max-w-5xl px-4 py-6">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <p className="text-2xl font-bold">My Projects</p>
+          <StartProjectDialog
+            onCreated={(id) => {
+              setTab("current");
+              setSelectedId(id);
+            }}
+            trigger={
+              <Button variant="hero">
+                <Plus className="h-4 w-4" /> Start New Project
+              </Button>
+            }
+          />
+        </div>
         {projectsQ.isLoading ? (
           <p className="py-20 text-center text-muted-foreground">Loading your projects…</p>
         ) : allProjects.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-[var(--shadow-card)]">
             <h2 className="text-xl font-semibold">No project yet</h2>
             <p className="mt-2 text-muted-foreground">
-              Your contractor hasn't set up your project. Please check back soon.
+              Start a new project request above, or check back soon.
             </p>
           </div>
         ) : (
@@ -265,7 +280,15 @@ function ProjectView({
   approveMut,
   changeMut,
 }: {
-  project: { id: string; name: string; status: string; address: string | null; start_date: string | null };
+  project: {
+    id: string;
+    name: string;
+    status: string;
+    address: string | null;
+    start_date: string | null;
+    project_type?: string | null;
+    project_description?: string | null;
+  };
   isCompleted: boolean;
   isLoading: boolean;
   updates: { id: string; title: string; body: string | null; created_at: string }[];
@@ -288,6 +311,11 @@ function ProjectView({
           </span>
         </div>
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-[oklch(0.88_0.02_255)]">
+          {project.project_type && (
+            <span className="inline-flex items-center gap-1.5">
+              {projectTypeLabel(project.project_type)}
+            </span>
+          )}
           {project.address && (
             <span className="inline-flex items-center gap-1.5">
               <MapPin className="h-4 w-4" /> {project.address}
@@ -301,6 +329,13 @@ function ProjectView({
           )}
         </div>
       </section>
+
+      {project.project_description && (
+        <section className="mt-4 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+          <h2 className="mb-1 text-sm font-semibold">Project Description</h2>
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{project.project_description}</p>
+        </section>
+      )}
 
       {isCompleted && (
         <p className="mt-4 rounded-lg border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">

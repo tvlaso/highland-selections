@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, UserPlus, FolderKanban, ChevronRight, MapPin, Library } from "lucide-react";
+import { Plus, UserPlus, FolderKanban, ChevronRight, MapPin, Library, Check, Info, Archive, Trash2, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
+import { SignedImage } from "@/components/SignedImage";
 import { createCustomer, listCustomers } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PROJECT_STATUSES } from "@/lib/constants";
+import { PROJECT_STATUSES, projectTypeLabel } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin | Highland Remodeling" }] }),
@@ -126,8 +127,76 @@ function AdminHome() {
   };
 
   const allProjects = projects.data ?? [];
-  const currentProjects = allProjects.filter((p) => p.status !== "Completed");
+  const requestProjects = allProjects.filter((p) => p.status === "New Request");
+  const currentProjects = allProjects.filter(
+    (p) => p.status !== "Completed" && p.status !== "New Request" && p.status !== "Archived",
+  );
   const completedProjects = allProjects.filter((p) => p.status === "Completed");
+
+  const acceptMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("projects").update({ status: "Active" }).eq("id", id);
+      if (error) throw error;
+      await supabase.from("project_timeline_events").insert({
+        project_id: id,
+        category: "project",
+        title: "Project accepted by admin",
+        description: "The project request was accepted and is now active",
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-projects"] });
+      toast.success("Project accepted");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const requestInfoMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("project_timeline_events").insert({
+        project_id: id,
+        category: "project",
+        title: "Admin requested more information",
+        description: "The admin requested more information from the customer",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-projects"] });
+      toast.success("Marked as needing more info");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const archiveMut = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("project_timeline_events").insert({
+        project_id: id,
+        category: "project",
+        title: "Project archived",
+        description: "The project request was archived",
+      });
+      const { error } = await supabase.from("projects").update({ status: "Archived" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-projects"] });
+      toast.success("Request archived");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("projects").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-projects"] });
+      toast.success("Project deleted");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
 
   const renderProject = (p: (typeof allProjects)[number]) => (
     <Link
@@ -144,6 +213,9 @@ function AdminHome() {
           </span>
         </div>
         <p className="mt-0.5 truncate text-sm text-muted-foreground">
+          {projectTypeLabel(p.project_type) && (
+            <span>{projectTypeLabel(p.project_type)}{" · "}</span>
+          )}
           {customerName(p.customer_id)}
           {p.address && (
             <span className="inline-flex items-center gap-1">
@@ -154,6 +226,56 @@ function AdminHome() {
       </div>
       <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
     </Link>
+  );
+
+  const renderRequest = (p: (typeof allProjects)[number]) => (
+    <div key={p.id} className="rounded-xl border border-accent/40 bg-card p-4 shadow-[var(--shadow-card)]">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="font-semibold">{projectTypeLabel(p.project_type) ?? "Project Request"}</h3>
+          <p className="text-sm text-muted-foreground">{customerName(p.customer_id)}</p>
+        </div>
+        <time className="shrink-0 text-xs text-muted-foreground">
+          {new Date(p.created_at).toLocaleDateString()}
+        </time>
+      </div>
+      {p.project_description && (
+        <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">{p.project_description}</p>
+      )}
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {p.address && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{p.address}</span>}
+        {p.intake_timeline && <span>Timeline: {p.intake_timeline}</span>}
+        {p.intake_budget && <span>Budget: {p.intake_budget}</span>}
+        {p.intake_contact_method && <span>Contact: {p.intake_contact_method}</span>}
+      </div>
+      {p.intake_notes && <p className="mt-1 text-xs text-muted-foreground">Notes: {p.intake_notes}</p>}
+      {Array.isArray(p.intake_photos) && p.intake_photos.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {p.intake_photos.map((path: string) => (
+            <SignedImage key={path} path={path} alt="inspiration" className="h-16 w-16 rounded-lg object-cover" />
+          ))}
+        </div>
+      )}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button size="sm" variant="hero" disabled={acceptMut.isPending} onClick={() => acceptMut.mutate(p.id)}>
+          <Check className="h-4 w-4" /> Accept Project
+        </Button>
+        <Button size="sm" variant="outline" disabled={requestInfoMut.isPending} onClick={() => requestInfoMut.mutate(p.id)}>
+          <Info className="h-4 w-4" /> Request More Info
+        </Button>
+        <Button size="sm" variant="outline" disabled={archiveMut.isPending} onClick={() => archiveMut.mutate(p.id)}>
+          <Archive className="h-4 w-4" /> Archive
+        </Button>
+        <Button size="sm" variant="ghost" disabled={deleteMut.isPending} onClick={() => deleteMut.mutate(p.id)}>
+          <Trash2 className="h-4 w-4 text-destructive" /> Delete
+        </Button>
+        <Button size="sm" variant="ghost" asChild>
+          <Link to="/admin/$projectId" params={{ projectId: p.id }}>
+            View <ChevronRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
+    </div>
   );
 
   return (
@@ -256,13 +378,23 @@ function AdminHome() {
         <div className="mt-6">
           {projects.isLoading ? (
             <p className="text-muted-foreground">Loading…</p>
-          ) : allProjects.length === 0 ? (
+          ) : (
+            <>
+              {requestProjects.length > 0 && (
+                <section className="mb-8">
+                  <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
+                    <Inbox className="h-5 w-5 text-accent" /> New Project Requests ({requestProjects.length})
+                  </h2>
+                  <div className="space-y-3">{requestProjects.map(renderRequest)}</div>
+                </section>
+              )}
+              {allProjects.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
               <FolderKanban className="mx-auto h-10 w-10 text-muted-foreground/50" />
               <p className="mt-3 font-medium">No projects yet</p>
               <p className="text-sm text-muted-foreground">Create a customer, then a project to get started.</p>
             </div>
-          ) : (
+              ) : (
             <Tabs defaultValue="current">
               <TabsList>
                 <TabsTrigger value="current">Current Projects ({currentProjects.length})</TabsTrigger>
@@ -287,6 +419,8 @@ function AdminHome() {
                 )}
               </TabsContent>
             </Tabs>
+              )}
+            </>
           )}
         </div>
       </main>

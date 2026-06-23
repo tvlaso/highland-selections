@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, PROJECT_STATUSES, formatCurrency } from "@/lib/constants";
+import { CATEGORIES, PROJECT_STATUSES, PROJECT_TYPES, formatCurrency } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
 import { generateSelectionsPdf, generatePmSpecPdf } from "@/lib/exportSelectionsPdf";
 
@@ -81,6 +81,8 @@ function ProjectDetail() {
   const [exporting, setExporting] = useState(false);
   const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
+  const [descDraft, setDescDraft] = useState("");
+  const [typeDraft, setTypeDraft] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -115,6 +117,18 @@ function ProjectDetail() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+  });
+
+  const detailsMut = useMutation({
+    mutationFn: async (patch: { project_type?: string | null; project_description?: string | null }) => {
+      const { error } = await supabase.from("projects").update(patch).eq("id", projectId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      toast.success("Project details saved");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
   const removeMut = useMutation({
@@ -180,6 +194,13 @@ function ProjectDetail() {
   const [addOpen, setAddOpen] = useState(false);
 
   const options = data?.options ?? [];
+
+  useEffect(() => {
+    if (data?.project) {
+      setDescDraft(data.project.project_description ?? "");
+      setTypeDraft(data.project.project_type ?? "");
+    }
+  }, [data?.project]);
 
   const timeline = useQuery({
     queryKey: ["admin-timeline", projectId],
@@ -326,6 +347,56 @@ function ProjectDetail() {
                   </SelectContent>
                 </Select>
               </div>
+            </section>
+
+            {/* Project type & description */}
+            <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+              <h2 className="mb-3 text-lg font-semibold">Job Details</h2>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>Project Type</Label>
+                  <Select value={typeDraft} onValueChange={setTypeDraft}>
+                    <SelectTrigger className="w-56"><SelectValue placeholder="Select a type" /></SelectTrigger>
+                    <SelectContent>
+                      {PROJECT_TYPES.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Project Description</Label>
+                  <Textarea
+                    rows={4}
+                    value={descDraft}
+                    onChange={(e) => setDescDraft(e.target.value)}
+                    placeholder="Describe the job…"
+                  />
+                </div>
+                <Button
+                  variant="hero"
+                  size="sm"
+                  disabled={detailsMut.isPending}
+                  onClick={() =>
+                    detailsMut.mutate({
+                      project_type: typeDraft || null,
+                      project_description: descDraft || null,
+                    })
+                  }
+                >
+                  Save Job Details
+                </Button>
+              </div>
+              {Array.isArray(project.intake_photos) && project.intake_photos.length > 0 && (
+                <div className="mt-4">
+                  <Label>Intake / Inspiration Photos</Label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {project.intake_photos.map((path: string) => (
+                      <EnlargeableImage key={path} path={path} alt="inspiration" className="h-20 w-20 rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* Selection options */}
