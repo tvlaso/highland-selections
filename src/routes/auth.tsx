@@ -121,7 +121,9 @@ function AuthPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-navy-deep/80 via-navy/60 to-navy/45" />
             <div className="relative z-10 flex flex-col justify-between p-10 text-white">
               <div className="flex items-start justify-between">
-                <Logo className="h-24 w-auto" />
+                <div className="inline-flex rounded-2xl bg-white/95 px-5 py-4 shadow-lg">
+                  <Logo className="h-20 w-auto" />
+                </div>
               </div>
               <div className="max-w-md">
                 <h2 className="text-4xl font-semibold leading-tight tracking-tight">
@@ -133,7 +135,7 @@ function AuthPage() {
                   Track progress, view selections, and stay connected with your remodeling project.
                 </p>
               </div>
-              <p className="text-sm text-white/60">© 2025 Highland Remodeling. All rights reserved.</p>
+              <div />
             </div>
           </div>
 
