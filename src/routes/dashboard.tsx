@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { MapPin, Calendar, Megaphone, ExternalLink, Check, MessageSquare, FileDown, ChevronRight, Plus } from "lucide-react";
+import { User, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
@@ -288,6 +289,10 @@ function ProjectView({
     start_date: string | null;
     project_type?: string | null;
     project_description?: string | null;
+    project_address?: string | null;
+    customer_name?: string | null;
+    customer_phone?: string | null;
+    customer_email?: string | null;
   };
   isCompleted: boolean;
   isLoading: boolean;
@@ -316,9 +321,24 @@ function ProjectView({
               {projectTypeLabel(project.project_type)}
             </span>
           )}
-          {project.address && (
+          {(project.project_address || project.address) && (
             <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-4 w-4" /> {project.address}
+              <MapPin className="h-4 w-4" /> {project.project_address || project.address}
+            </span>
+          )}
+          {project.customer_name && (
+            <span className="inline-flex items-center gap-1.5">
+              <User className="h-4 w-4" /> {project.customer_name}
+            </span>
+          )}
+          {project.customer_phone && (
+            <span className="inline-flex items-center gap-1.5">
+              <Phone className="h-4 w-4" /> {project.customer_phone}
+            </span>
+          )}
+          {project.customer_email && (
+            <span className="inline-flex items-center gap-1.5">
+              <Mail className="h-4 w-4" /> {project.customer_email}
             </span>
           )}
           {project.start_date && (
