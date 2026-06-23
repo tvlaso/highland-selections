@@ -186,13 +186,27 @@ function Dashboard() {
     <div className="min-h-screen bg-background">
       <AppHeader subtitle="My Project" />
       <main className="mx-auto max-w-5xl px-4 py-6">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold">My Projects</h1>
+          <StartProjectDialog
+            onCreated={(id) => {
+              setTab("current");
+              setSelectedId(id);
+            }}
+            trigger={
+              <Button variant="hero">
+                <Plus className="h-4 w-4" /> Start New Project
+              </Button>
+            }
+          />
+        </div>
         {projectsQ.isLoading ? (
           <p className="py-20 text-center text-muted-foreground">Loading your projects…</p>
         ) : allProjects.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-[var(--shadow-card)]">
             <h2 className="text-xl font-semibold">No project yet</h2>
             <p className="mt-2 text-muted-foreground">
-              Your contractor hasn't set up your project. Please check back soon.
+              Start a new project request above, or check back soon.
             </p>
           </div>
         ) : (
