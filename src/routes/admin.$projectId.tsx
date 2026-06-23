@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
 import { SignedImage } from "@/components/SignedImage";
+import { EnlargeableImage } from "@/components/EnlargeableImage";
+import { SelectionNotes } from "@/components/SelectionNotes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +41,7 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, PROJECT_STATUSES, formatCurrency } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
-import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
+import { generateSelectionsPdf, generatePmSpecPdf } from "@/lib/exportSelectionsPdf";
 
 export const Route = createFileRoute("/admin/$projectId")({
   head: () => ({ meta: [{ title: "Manage Project | Highland Remodeling" }] }),
@@ -77,6 +79,7 @@ function ProjectDetail() {
   const qc = useQueryClient();
   const syncVersion = useServerFn(syncSelectionsVersion);
   const [exporting, setExporting] = useState(false);
+  const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
 
   useEffect(() => {
@@ -229,6 +232,53 @@ function ProjectDetail() {
     }
   };
 
+  const resolveCustomerName = async () => {
+    if (!data?.project?.customer_id) return "—";
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", data.project.customer_id)
+      .maybeSingle();
+    return prof?.full_name || prof?.email || "—";
+  };
+
+  const handleExportPm = async () => {
+    if (!data?.project) return;
+    setExportingPm(true);
+    try {
+      const customerName = await resolveCustomerName();
+      const { version, lastModified } = await syncVersion({ data: { projectId } });
+      await generatePmSpecPdf({
+        projectName: data.project.name,
+        customerName,
+        address: data.project.address,
+        version,
+        lastModified,
+        options: options.map((o) => ({
+          id: o.id,
+          category: o.category,
+          customer_notes: o.customer_notes,
+          status: o.status,
+          master_catalog: o.master_catalog
+            ? {
+                product_name: o.master_catalog.product_name,
+                vendor: o.master_catalog.vendor,
+                image_url: o.master_catalog.image_url,
+                product_url: o.master_catalog.product_url,
+                price: o.master_catalog.price,
+                description: o.master_catalog.description,
+              }
+            : null,
+        })),
+      });
+      qc.invalidateQueries({ queryKey: ["admin-timeline", projectId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not export PDF");
+    } finally {
+      setExportingPm(false);
+    }
+  };
+
   const move = (cat: string, index: number, dir: -1 | 1) => {
     const items = options.filter((o) => o.category === cat);
     const target = index + dir;
@@ -289,6 +339,9 @@ function ProjectDetail() {
                   <Button variant="outline" size="sm" disabled={exporting || options.length === 0} onClick={handleExport}>
                     <FileDown className="h-4 w-4" /> {exporting ? "Exporting…" : "Export Selections List"}
                   </Button>
+                  <Button variant="outline" size="sm" disabled={exportingPm || options.length === 0} onClick={handleExportPm}>
+                    <FileDown className="h-4 w-4" /> {exportingPm ? "Exporting…" : "PM Specification PDF"}
+                  </Button>
                   <Button variant="hero" size="sm" onClick={() => setAddOpen(true)}>
                     <Plus className="h-4 w-4" /> Add from Catalog
                   </Button>
@@ -305,8 +358,9 @@ function ProjectDetail() {
                         {items.map((o, idx) => {
                           const c = o.master_catalog;
                           return (
-                            <div key={o.id} className="flex gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
-                              <SignedImage path={c?.image_url ?? null} alt={c?.product_name ?? ""} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+                            <div key={o.id} className="rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
+                              <div className="flex gap-3">
+                              <EnlargeableImage path={c?.image_url ?? null} alt={c?.product_name ?? ""} className="h-16 w-16 shrink-0 rounded-lg" />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
                                   <h4 className="truncate font-semibold">{c?.product_name ?? "Unknown product"}</h4>
@@ -354,6 +408,10 @@ function ProjectDetail() {
                                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                   </Button>
                                 </div>
+                              </div>
+                              </div>
+                              <div className="mt-3 border-t border-border pt-3">
+                                <SelectionNotes optionId={o.id} projectId={projectId} />
                               </div>
                             </div>
                           );

@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PROJECT_STATUSES } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/")({
@@ -124,6 +125,37 @@ function AdminHome() {
     return customers.data.find((c) => c.id === id)?.full_name ?? "Unassigned";
   };
 
+  const allProjects = projects.data ?? [];
+  const currentProjects = allProjects.filter((p) => p.status !== "Completed");
+  const completedProjects = allProjects.filter((p) => p.status === "Completed");
+
+  const renderProject = (p: (typeof allProjects)[number]) => (
+    <Link
+      key={p.id}
+      to="/admin/$projectId"
+      params={{ projectId: p.id }}
+      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)] transition-colors hover:border-accent"
+    >
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="truncate font-semibold">{p.name}</h3>
+          <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+            {p.status}
+          </span>
+        </div>
+        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+          {customerName(p.customer_id)}
+          {p.address && (
+            <span className="inline-flex items-center gap-1">
+              {" · "}<MapPin className="h-3 w-3" />{p.address}
+            </span>
+          )}
+        </p>
+      </div>
+      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+    </Link>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader subtitle="Contractor Admin" />
@@ -221,42 +253,40 @@ function AdminHome() {
           </div>
         </div>
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-6">
           {projects.isLoading ? (
             <p className="text-muted-foreground">Loading…</p>
-          ) : (projects.data ?? []).length === 0 ? (
+          ) : allProjects.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
               <FolderKanban className="mx-auto h-10 w-10 text-muted-foreground/50" />
               <p className="mt-3 font-medium">No projects yet</p>
               <p className="text-sm text-muted-foreground">Create a customer, then a project to get started.</p>
             </div>
           ) : (
-            projects.data!.map((p) => (
-              <Link
-                key={p.id}
-                to="/admin/$projectId"
-                params={{ projectId: p.id }}
-                className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)] transition-colors hover:border-accent"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="truncate font-semibold">{p.name}</h3>
-                    <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                      {p.status}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                    {customerName(p.customer_id)}
-                    {p.address && (
-                      <span className="inline-flex items-center gap-1">
-                        {" · "}<MapPin className="h-3 w-3" />{p.address}
-                      </span>
-                    )}
+            <Tabs defaultValue="current">
+              <TabsList>
+                <TabsTrigger value="current">Current Projects ({currentProjects.length})</TabsTrigger>
+                <TabsTrigger value="completed">Completed Projects ({completedProjects.length})</TabsTrigger>
+              </TabsList>
+              <TabsContent value="current" className="mt-4 space-y-3">
+                {currentProjects.length === 0 ? (
+                  <p className="rounded-xl border border-border bg-card p-6 text-center text-muted-foreground">
+                    No current projects.
                   </p>
-                </div>
-                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-              </Link>
-            ))
+                ) : (
+                  currentProjects.map(renderProject)
+                )}
+              </TabsContent>
+              <TabsContent value="completed" className="mt-4 space-y-3">
+                {completedProjects.length === 0 ? (
+                  <p className="rounded-xl border border-border bg-card p-6 text-center text-muted-foreground">
+                    No completed projects.
+                  </p>
+                ) : (
+                  completedProjects.map(renderProject)
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </main>

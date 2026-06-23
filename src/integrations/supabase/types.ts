@@ -249,6 +249,51 @@ export type Database = {
         }
         Relationships: []
       }
+      selection_notes: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          option_id: string
+          project_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string
+          body: string
+          created_at?: string
+          id?: string
+          option_id: string
+          project_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          option_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_notes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "project_selection_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_notes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
