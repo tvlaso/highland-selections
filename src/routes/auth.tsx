@@ -318,25 +318,6 @@ function AuthPage() {
 
                   {mode === "signin" && (
                     <>
-                      <div className="relative flex items-center justify-center py-2">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-border" />
-                        </div>
-                        <span className="relative bg-card px-3 text-sm text-muted-foreground">OR</span>
-                      </div>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="xl"
-                        className="w-full"
-                        onClick={handleGoogleSignIn}
-                        disabled={busy}
-                      >
-                        <GoogleIcon className="h-5 w-5" />
-                        Continue with Google
-                      </Button>
-
                       <p className="text-center text-sm text-muted-foreground">
                         Don't have an account?{" "}
                         <button
@@ -368,18 +349,6 @@ function AuthPage() {
           </div>
         </div>
       </div>
-
-      <footer className="mt-4 text-center text-xs text-white/60 sm:mt-6">
-        © 2025 Highland Remodeling. All rights reserved.{" "}
-        <span className="mx-2 hidden sm:inline">|</span>
-        <a href="#" className="hover:text-white/90">
-          Privacy Policy
-        </a>{" "}
-        <span className="mx-2">|</span>
-        <a href="#" className="hover:text-white/90">
-          Terms of Service
-        </a>
-      </footer>
     </div>
   );
 }
