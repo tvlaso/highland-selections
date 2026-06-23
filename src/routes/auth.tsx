@@ -54,6 +54,7 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await logCustomerSignIn();
         await refreshRole();
         toast.success("Welcome back!");
       }
