@@ -89,8 +89,6 @@ function ProjectDetail() {
   const [exporting, setExporting] = useState(false);
   const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
-  const [descDraft, setDescDraft] = useState("");
-  const [typeDraft, setTypeDraft] = useState("");
   const [custOpen, setCustOpen] = useState(false);
 
   const customers = useQuery({
@@ -124,26 +122,6 @@ function ProjectDetail() {
         updates: updates ?? [],
       };
     },
-  });
-
-  const statusMut = useMutation({
-    mutationFn: async (status: string) => {
-      const { error } = await supabase.from("projects").update({ status }).eq("id", projectId);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
-  });
-
-  const detailsMut = useMutation({
-    mutationFn: async (patch: { project_type?: string | null; project_description?: string | null }) => {
-      const { error } = await supabase.from("projects").update(patch).eq("id", projectId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
-      toast.success("Project details saved");
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
   const removeMut = useMutation({
