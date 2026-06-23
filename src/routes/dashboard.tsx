@@ -275,8 +275,6 @@ function ProjectView({
   categoriesWithOptions,
   exporting,
   onExport,
-  noteDrafts,
-  setNoteDrafts,
   approveMut,
   changeMut,
 }: {
@@ -301,10 +299,8 @@ function ProjectView({
   categoriesWithOptions: readonly string[];
   exporting: boolean;
   onExport: () => void;
-  noteDrafts: Record<string, string>;
-  setNoteDrafts: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   approveMut: ReturnType<typeof useMutation<void, Error, string>>;
-  changeMut: ReturnType<typeof useMutation<void, Error, { id: string; note: string }>>;
+  changeMut: ReturnType<typeof useMutation<void, Error, string>>;
 }) {
   return (
     <>
@@ -461,12 +457,6 @@ function ProjectView({
                             <SelectionNotes optionId={o.id} projectId={project.id} readOnly={isCompleted} />
                             {!isCompleted && (
                               <div className="space-y-2 border-t border-border pt-3">
-                                <Textarea
-                                  rows={2}
-                                  placeholder="Add a note for your contractor (optional)"
-                                  value={noteDrafts[o.id] ?? o.customer_notes ?? ""}
-                                  onChange={(e) => setNoteDrafts((p) => ({ ...p, [o.id]: e.target.value }))}
-                                />
                                 <div className="flex flex-wrap gap-2">
                                   <Button
                                     variant="success"
@@ -480,9 +470,7 @@ function ProjectView({
                                     variant="outline"
                                     size="sm"
                                     disabled={changeMut.isPending}
-                                    onClick={() =>
-                                      changeMut.mutate({ id: o.id, note: noteDrafts[o.id] ?? o.customer_notes ?? "" })
-                                    }
+                                    onClick={() => changeMut.mutate(o.id)}
                                   >
                                     <MessageSquare className="h-4 w-4" /> Request Change
                                   </Button>
