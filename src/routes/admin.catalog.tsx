@@ -89,7 +89,7 @@ function CatalogPage() {
                 <div className="space-y-2">
                   {(items ?? []).filter((i) => i.category === cat).map((i) => (
                     <div key={i.id} className="flex gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
-                      <SignedImage path={i.image_url} alt={i.product_name} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+                      <EnlargeableImage path={i.image_url} alt={i.product_name} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="truncate font-semibold">
