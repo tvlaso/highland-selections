@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, PROJECT_STATUSES, formatCurrency } from "@/lib/constants";
+import { CATEGORIES, PROJECT_STATUSES, PROJECT_TYPES, formatCurrency } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
 import { generateSelectionsPdf, generatePmSpecPdf } from "@/lib/exportSelectionsPdf";
 
