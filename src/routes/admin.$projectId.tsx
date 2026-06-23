@@ -339,6 +339,9 @@ function ProjectDetail() {
                   <Button variant="outline" size="sm" disabled={exporting || options.length === 0} onClick={handleExport}>
                     <FileDown className="h-4 w-4" /> {exporting ? "Exporting…" : "Export Selections List"}
                   </Button>
+                  <Button variant="outline" size="sm" disabled={exportingPm || options.length === 0} onClick={handleExportPm}>
+                    <FileDown className="h-4 w-4" /> {exportingPm ? "Exporting…" : "PM Specification PDF"}
+                  </Button>
                   <Button variant="hero" size="sm" onClick={() => setAddOpen(true)}>
                     <Plus className="h-4 w-4" /> Add from Catalog
                   </Button>
