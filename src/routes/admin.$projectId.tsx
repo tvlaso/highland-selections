@@ -681,6 +681,9 @@ type ProjectCustomerInfo = {
   customer_email: string | null;
   project_address: string | null;
   address: string | null;
+  project_type: string | null;
+  project_description: string | null;
+  status: string;
 };
 
 function EditCustomerInfoDialog({
@@ -704,6 +707,9 @@ function EditCustomerInfoDialog({
   const [phone, setPhone] = useState(project.customer_phone ?? "");
   const [email, setEmail] = useState(project.customer_email ?? "");
   const [address, setAddress] = useState(project.project_address ?? project.address ?? "");
+  const [type, setType] = useState(project.project_type ?? "");
+  const [description, setDescription] = useState(project.project_description ?? "");
+  const [status, setStatus] = useState(project.status);
 
   useEffect(() => {
     if (open) {
@@ -712,6 +718,9 @@ function EditCustomerInfoDialog({
       setPhone(project.customer_phone ?? "");
       setEmail(project.customer_email ?? "");
       setAddress(project.project_address ?? project.address ?? "");
+      setType(project.project_type ?? "");
+      setDescription(project.project_description ?? "");
+      setStatus(project.status);
     }
   }, [open, project]);
 
@@ -729,14 +738,17 @@ function EditCustomerInfoDialog({
           customer_email: email.trim() || null,
           project_address: address.trim() || null,
           address: address.trim() || null,
+          project_type: type || null,
+          project_description: description.trim() || null,
+          status,
         })
         .eq("id", projectId);
       if (error) throw error;
 
       const events: { title: string; description: string }[] = [
         {
-          title: "Customer information updated",
-          description: "An admin updated the customer contact details for this project",
+          title: "Banner details updated",
+          description: "An admin updated the project and customer details for this project",
         },
       ];
       if (customerChanged) {
@@ -773,9 +785,33 @@ function EditCustomerInfoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Customer Info</DialogTitle>
+          <DialogTitle>Edit Banner Details</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Project Type</Label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+              <SelectContent>
+                {PROJECT_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Job Description</Label>
+            <Textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the job…" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Project Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PROJECT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <Label>Assigned Customer</Label>
             <Select value={customerId} onValueChange={setCustomerId}>
