@@ -386,7 +386,7 @@ function DesignFormDialog({
   );
 }
 
-type DetailData = DesignRow & {
+type DetailData = Omit<DesignRow, "design_products" | "design_files"> & {
   design_files: FileRow[];
   design_products: DesignProduct[];
   design_versions: Version[];
