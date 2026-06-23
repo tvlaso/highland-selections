@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
 import { SignedImage } from "@/components/SignedImage";
 import { EnlargeableImage } from "@/components/EnlargeableImage";
+import { ImageGallery } from "@/components/ImageGallery";
 import { SelectionNotes } from "@/components/SelectionNotes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,7 @@ type CatalogItem = {
   vendor: string | null;
   price: number | null;
   image_url: string | null;
+  images: string[] | null;
   product_url: string | null;
   description: string | null;
   active: boolean;
@@ -436,7 +438,11 @@ function ProjectDetail() {
                           return (
                             <div key={o.id} className="rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
                               <div className="flex gap-3">
-                              <EnlargeableImage path={c?.image_url ?? null} alt={c?.product_name ?? ""} className="h-16 w-16 shrink-0 rounded-lg" />
+                              <ImageGallery
+                                images={c?.images?.length ? c.images : [c?.image_url ?? null]}
+                                alt={c?.product_name ?? ""}
+                                className="h-16 w-16 shrink-0 rounded-lg"
+                              />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
                                   <h4 className="truncate font-semibold">{c?.product_name ?? "Unknown product"}</h4>
