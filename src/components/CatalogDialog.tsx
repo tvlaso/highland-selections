@@ -29,23 +29,29 @@ import { createProductPhotoUpload } from "@/lib/admin.functions";
 
 export interface EditableCatalogItem {
   id?: string;
+  brand: string | null;
   product_name: string;
   category: string;
   vendor: string | null;
   price: number | null;
   image_url: string | null;
   product_url: string | null;
+  sku: string | null;
+  finish: string | null;
   description: string | null;
   active: boolean;
 }
 
 const blank = (): EditableCatalogItem => ({
+  brand: null,
   product_name: "",
   category: CATEGORIES[0],
   vendor: null,
   price: null,
   image_url: null,
   product_url: null,
+  sku: null,
+  finish: null,
   description: null,
   active: true,
 });
@@ -91,12 +97,15 @@ export function CatalogDialog({
   const mutation = useMutation({
     mutationFn: async () => {
       const payload = {
+        brand: form.brand || null,
         product_name: form.product_name,
         category: form.category,
         vendor: form.vendor || null,
         price: form.price,
         image_url: form.image_url,
         product_url: form.product_url || null,
+        sku: form.sku || null,
+        finish: form.finish || null,
         description: form.description || null,
         active: form.active,
       };
@@ -126,8 +135,16 @@ export function CatalogDialog({
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
+            <Label>Brand</Label>
+            <Input value={form.brand ?? ""} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
             <Label>Product name</Label>
             <Input value={form.product_name} onChange={(e) => setForm((f) => ({ ...f, product_name: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Vendor</Label>
+            <Input value={form.vendor ?? ""} onChange={(e) => setForm((f) => ({ ...f, vendor: e.target.value }))} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -149,18 +166,6 @@ export function CatalogDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Vendor</Label>
-            <Input value={form.vendor ?? ""} onChange={(e) => setForm((f) => ({ ...f, vendor: e.target.value }))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Product URL</Label>
-            <Input
-              value={form.product_url ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, product_url: e.target.value }))}
-              placeholder="https://…"
-            />
-          </div>
-          <div className="space-y-1.5">
             <Label>Product photo</Label>
             <div className="flex items-center gap-3">
               <SignedImage path={form.image_url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
@@ -177,6 +182,24 @@ export function CatalogDialog({
               <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
                 <Upload className="h-4 w-4" /> {uploading ? "Uploading…" : "Upload"}
               </Button>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Manufacturer PDF</Label>
+            <Input
+              value={form.product_url ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, product_url: e.target.value }))}
+              placeholder="https://… (link to manufacturer spec sheet / PDF)"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>SKU</Label>
+              <Input value={form.sku ?? ""} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Finish</Label>
+              <Input value={form.finish ?? ""} onChange={(e) => setForm((f) => ({ ...f, finish: e.target.value }))} />
             </div>
           </div>
           <div className="space-y-1.5">

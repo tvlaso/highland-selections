@@ -17,40 +17,49 @@ export type Database = {
       master_catalog: {
         Row: {
           active: boolean
+          brand: string | null
           category: string
           created_at: string
           description: string | null
+          finish: string | null
           id: string
           image_url: string | null
           price: number | null
           product_name: string
           product_url: string | null
+          sku: string | null
           updated_at: string
           vendor: string | null
         }
         Insert: {
           active?: boolean
+          brand?: string | null
           category: string
           created_at?: string
           description?: string | null
+          finish?: string | null
           id?: string
           image_url?: string | null
           price?: number | null
           product_name: string
           product_url?: string | null
+          sku?: string | null
           updated_at?: string
           vendor?: string | null
         }
         Update: {
           active?: boolean
+          brand?: string | null
           category?: string
           created_at?: string
           description?: string | null
+          finish?: string | null
           id?: string
           image_url?: string | null
           price?: number | null
           product_name?: string
           product_url?: string | null
+          sku?: string | null
           updated_at?: string
           vendor?: string | null
         }
