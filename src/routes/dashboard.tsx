@@ -8,7 +8,6 @@ import { User, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
-import { EnlargeableImage } from "@/components/EnlargeableImage";
 import { ImageGallery } from "@/components/ImageGallery";
 import { SelectionNotes } from "@/components/SelectionNotes";
 import { StartProjectDialog } from "@/components/StartProjectDialog";
