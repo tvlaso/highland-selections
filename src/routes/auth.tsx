@@ -118,7 +118,7 @@ function AuthPage() {
               className="absolute inset-0 h-full w-full object-cover"
               loading="eager"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-navy-deep/90 via-navy/75 to-navy/60" />
+            <div className="absolute inset-0 bg-gradient-to-br from-navy-deep/80 via-navy/60 to-navy/45" />
             <div className="relative z-10 flex flex-col justify-between p-10 text-white">
               <div className="flex items-start justify-between">
                 <Logo className="h-24 w-auto" />
