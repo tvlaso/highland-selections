@@ -1,0 +1,1 @@
+ALTER TABLE public.master_catalog ADD COLUMN product_link text;

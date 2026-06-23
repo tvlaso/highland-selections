@@ -6,7 +6,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
-import { SignedImage } from "@/components/SignedImage";
+import { EnlargeableImage } from "@/components/EnlargeableImage";
 import { CatalogDialog, type EditableCatalogItem } from "@/components/CatalogDialog";
 import { Button } from "@/components/ui/button";
 import { CATEGORIES, formatCurrency } from "@/lib/constants";
@@ -89,7 +89,7 @@ function CatalogPage() {
                 <div className="space-y-2">
                   {(items ?? []).filter((i) => i.category === cat).map((i) => (
                     <div key={i.id} className="flex gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
-                      <SignedImage path={i.image_url} alt={i.product_name} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+                      <EnlargeableImage path={i.image_url} alt={i.product_name} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="truncate font-semibold">
@@ -112,6 +112,11 @@ function CatalogPage() {
                         {i.product_url && (
                           <a href={i.product_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
                             Manufacturer PDF <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                        {i.product_link && (
+                          <a href={i.product_link} target="_blank" rel="noreferrer" className="ml-2 inline-flex items-center gap-1 text-sm text-accent hover:underline">
+                            Product link <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                         <div className="mt-2 flex gap-1">
