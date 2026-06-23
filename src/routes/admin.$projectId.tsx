@@ -117,6 +117,18 @@ function ProjectDetail() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
   });
 
+  const detailsMut = useMutation({
+    mutationFn: async (patch: { project_type?: string | null; project_description?: string | null }) => {
+      const { error } = await supabase.from("projects").update(patch).eq("id", projectId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      toast.success("Project details saved");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
   const removeMut = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("project_selection_options").delete().eq("id", id);
