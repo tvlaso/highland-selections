@@ -36,6 +36,31 @@ function AuthPage() {
   }, [loading, session, role, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    const logCustomerSignIn = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return;
+      // Only log sign-ins for customers, not admins.
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      if ((roles ?? []).some((r) => r.role === "admin")) return;
+      const { data: projects } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("customer_id", uid);
+      if (!projects || projects.length === 0) return;
+      await supabase.from("project_timeline_events").insert(
+        projects.map((p) => ({
+          project_id: p.id,
+          category: "project",
+          title: "Customer signed in",
+          description: "The customer signed in to the portal",
+          created_by: uid,
+        })),
+      );
+    };
     e.preventDefault();
     setBusy(true);
     try {
@@ -54,6 +79,7 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await logCustomerSignIn();
         await refreshRole();
         toast.success("Welcome back!");
       }
