@@ -409,55 +409,16 @@ function ProjectDetail() {
               }}
             />
 
-            {/* Project type & description */}
-            <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-              <h2 className="mb-3 text-lg font-semibold">Job Details</h2>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label>Project Type</Label>
-                  <Select value={typeDraft} onValueChange={setTypeDraft}>
-                    <SelectTrigger className="w-56"><SelectValue placeholder="Select a type" /></SelectTrigger>
-                    <SelectContent>
-                      {PROJECT_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {Array.isArray(project.intake_photos) && project.intake_photos.length > 0 && (
+              <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+                <h2 className="mb-3 text-lg font-semibold">Intake / Inspiration Photos</h2>
+                <div className="flex flex-wrap gap-2">
+                  {project.intake_photos.map((path: string) => (
+                    <EnlargeableImage key={path} path={path} alt="inspiration" className="h-20 w-20 rounded-lg" />
+                  ))}
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Project Description</Label>
-                  <Textarea
-                    rows={4}
-                    value={descDraft}
-                    onChange={(e) => setDescDraft(e.target.value)}
-                    placeholder="Describe the job…"
-                  />
-                </div>
-                <Button
-                  variant="hero"
-                  size="sm"
-                  disabled={detailsMut.isPending}
-                  onClick={() =>
-                    detailsMut.mutate({
-                      project_type: typeDraft || null,
-                      project_description: descDraft || null,
-                    })
-                  }
-                >
-                  Save Job Details
-                </Button>
-              </div>
-              {Array.isArray(project.intake_photos) && project.intake_photos.length > 0 && (
-                <div className="mt-4">
-                  <Label>Intake / Inspiration Photos</Label>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {project.intake_photos.map((path: string) => (
-                      <EnlargeableImage key={path} path={path} alt="inspiration" className="h-20 w-20 rounded-lg" />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
+              </section>
+            )}
 
             {/* Selection options */}
             <section className="mt-8">
