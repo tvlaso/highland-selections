@@ -15,6 +15,11 @@ import {
   Library,
   FileDown,
   History,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  Pencil,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,6 +36,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -42,6 +48,8 @@ import {
 import { CATEGORIES, PROJECT_STATUSES, PROJECT_TYPES, formatCurrency } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
 import { generateSelectionsPdf, generatePmSpecPdf } from "@/lib/exportSelectionsPdf";
+import { listCustomers } from "@/lib/admin.functions";
+import { isValidEmail, isValidPhone } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/$projectId")({
   head: () => ({ meta: [{ title: "Manage Project | Highland Remodeling" }] }),
