@@ -6,10 +6,12 @@ export function SignedImage({
   path,
   alt,
   className = "",
+  bucket = "product-photos",
 }: {
   path: string | null | undefined;
   alt: string;
   className?: string;
+  bucket?: string;
 }) {
   const [url, setUrl] = useState<string | null>(null);
 
@@ -20,7 +22,7 @@ export function SignedImage({
       return;
     }
     supabase.storage
-      .from("product-photos")
+      .from(bucket)
       .createSignedUrl(path, 3600)
       .then(({ data }) => {
         if (active) setUrl(data?.signedUrl ?? null);
@@ -28,7 +30,7 @@ export function SignedImage({
     return () => {
       active = false;
     };
-  }, [path]);
+  }, [path, bucket]);
 
   if (!path || !url) {
     return (
