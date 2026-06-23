@@ -179,7 +179,7 @@ export function DesignsGallery({
                     className="block h-full w-full"
                     onClick={() => setLightbox(p.path)}
                   >
-                    <SignedImage path={p.path} alt="design" className="h-full w-full object-cover" />
+                    <SignedImage path={p.path} alt="design" bucket="design-assets" className="h-full w-full object-cover" />
                   </button>
                   {isAdmin && (
                     <button
