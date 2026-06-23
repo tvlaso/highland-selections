@@ -12,7 +12,6 @@ import { EnlargeableImage } from "@/components/EnlargeableImage";
 import { SelectionNotes } from "@/components/SelectionNotes";
 import { StartProjectDialog } from "@/components/StartProjectDialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CATEGORIES, formatCurrency, projectTypeLabel } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
