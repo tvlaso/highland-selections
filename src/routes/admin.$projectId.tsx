@@ -188,6 +188,32 @@ function ProjectDetail() {
 
   const options = data?.options ?? [];
 
+  const assignedProfile =
+    (customers.data ?? []).find((c) => c.id === data?.project?.customer_id) ?? null;
+
+  // Backfill empty project snapshot fields from the assigned customer profile.
+  useEffect(() => {
+    const project = data?.project;
+    if (!project || !project.customer_id || !assignedProfile) return;
+    const patch: Record<string, string> = {};
+    if (!project.customer_name && assignedProfile.full_name)
+      patch.customer_name = assignedProfile.full_name;
+    if (!project.customer_phone && assignedProfile.phone)
+      patch.customer_phone = assignedProfile.phone;
+    if (!project.customer_email && assignedProfile.email)
+      patch.customer_email = assignedProfile.email;
+    if (!project.project_address && !project.address && assignedProfile.address) {
+      patch.project_address = assignedProfile.address;
+      patch.address = assignedProfile.address;
+    }
+    if (Object.keys(patch).length === 0) return;
+    (async () => {
+      const { error } = await supabase.from("projects").update(patch).eq("id", project.id);
+      if (!error) qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.project, assignedProfile]);
+
   const timeline = useQuery({
     queryKey: ["admin-timeline", projectId],
     enabled: role === "admin",
