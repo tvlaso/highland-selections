@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
 import { Route as AdminProjectIdRouteImport } from './routes/admin.$projectId'
+import { Route as AdminChecklistProjectIdRouteImport } from './routes/admin.checklist.$projectId'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -58,6 +59,11 @@ const AdminProjectIdRoute = AdminProjectIdRouteImport.update({
   path: '/admin/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminChecklistProjectIdRoute = AdminChecklistProjectIdRouteImport.update({
+  id: '/admin/checklist/$projectId',
+  path: '/admin/checklist/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/admin/$projectId'
     | '/admin/catalog'
     | '/admin/'
+    | '/admin/checklist/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/admin/$projectId'
     | '/admin/catalog'
     | '/admin'
+    | '/admin/checklist/$projectId'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/admin/$projectId'
     | '/admin/catalog'
     | '/admin/'
+    | '/admin/checklist/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   AdminProjectIdRoute: typeof AdminProjectIdRoute
   AdminCatalogRoute: typeof AdminCatalogRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminChecklistProjectIdRoute: typeof AdminChecklistProjectIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/checklist/$projectId': {
+      id: '/admin/checklist/$projectId'
+      path: '/admin/checklist/$projectId'
+      fullPath: '/admin/checklist/$projectId'
+      preLoaderRoute: typeof AdminChecklistProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminProjectIdRoute: AdminProjectIdRoute,
   AdminCatalogRoute: AdminCatalogRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminChecklistProjectIdRoute: AdminChecklistProjectIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
