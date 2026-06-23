@@ -358,8 +358,9 @@ function ProjectDetail() {
                         {items.map((o, idx) => {
                           const c = o.master_catalog;
                           return (
-                            <div key={o.id} className="flex gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
-                              <SignedImage path={c?.image_url ?? null} alt={c?.product_name ?? ""} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+                            <div key={o.id} className="rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
+                              <div className="flex gap-3">
+                              <EnlargeableImage path={c?.image_url ?? null} alt={c?.product_name ?? ""} className="h-16 w-16 shrink-0 rounded-lg" />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
                                   <h4 className="truncate font-semibold">{c?.product_name ?? "Unknown product"}</h4>
@@ -407,6 +408,10 @@ function ProjectDetail() {
                                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                   </Button>
                                 </div>
+                              </div>
+                              </div>
+                              <div className="mt-3 border-t border-border pt-3">
+                                <SelectionNotes optionId={o.id} projectId={projectId} />
                               </div>
                             </div>
                           );
