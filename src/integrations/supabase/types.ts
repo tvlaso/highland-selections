@@ -213,7 +213,14 @@ export type Database = {
           created_at: string
           customer_id: string | null
           id: string
+          intake_budget: string | null
+          intake_contact_method: string | null
+          intake_notes: string | null
+          intake_photos: string[]
+          intake_timeline: string | null
           name: string
+          project_description: string | null
+          project_type: string | null
           selections_content_hash: string | null
           selections_version: number
           selections_version_updated_at: string | null
@@ -226,7 +233,14 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           id?: string
+          intake_budget?: string | null
+          intake_contact_method?: string | null
+          intake_notes?: string | null
+          intake_photos?: string[]
+          intake_timeline?: string | null
           name: string
+          project_description?: string | null
+          project_type?: string | null
           selections_content_hash?: string | null
           selections_version?: number
           selections_version_updated_at?: string | null
@@ -239,7 +253,14 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           id?: string
+          intake_budget?: string | null
+          intake_contact_method?: string | null
+          intake_notes?: string | null
+          intake_photos?: string[]
+          intake_timeline?: string | null
           name?: string
+          project_description?: string | null
+          project_type?: string | null
           selections_content_hash?: string | null
           selections_version?: number
           selections_version_updated_at?: string | null
