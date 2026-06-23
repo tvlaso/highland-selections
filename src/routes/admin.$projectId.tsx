@@ -81,6 +81,8 @@ function ProjectDetail() {
   const [exporting, setExporting] = useState(false);
   const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
+  const [descDraft, setDescDraft] = useState("");
+  const [typeDraft, setTypeDraft] = useState("");
 
   useEffect(() => {
     if (loading) return;
