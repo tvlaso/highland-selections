@@ -92,7 +92,10 @@ function CatalogPage() {
                       <SignedImage path={i.image_url} alt={i.product_name} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className="truncate font-semibold">{i.product_name}</h4>
+                          <h4 className="truncate font-semibold">
+                            {i.brand ? <span className="text-muted-foreground">{i.brand} · </span> : null}
+                            {i.product_name}
+                          </h4>
                           {!i.active && (
                             <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">Inactive</span>
                           )}
@@ -100,10 +103,15 @@ function CatalogPage() {
                         <p className="text-sm text-muted-foreground">
                           {i.vendor ? `${i.vendor} · ` : ""}{formatCurrency(i.price)}
                         </p>
+                        {(i.sku || i.finish) && (
+                          <p className="text-sm text-muted-foreground">
+                            {[i.finish, i.sku ? `SKU: ${i.sku}` : null].filter(Boolean).join(" · ")}
+                          </p>
+                        )}
                         {i.description && <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{i.description}</p>}
                         {i.product_url && (
                           <a href={i.product_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
-                            Product <ExternalLink className="h-3 w-3" />
+                            Manufacturer PDF <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                         <div className="mt-2 flex gap-1">
