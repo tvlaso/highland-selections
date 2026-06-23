@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, UserPlus, FolderKanban, ChevronRight, MapPin, Library } from "lucide-react";
+import { Plus, UserPlus, FolderKanban, ChevronRight, MapPin, Library, Check, Info, Archive, Trash2, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
+import { SignedImage } from "@/components/SignedImage";
 import { createCustomer, listCustomers } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PROJECT_STATUSES } from "@/lib/constants";
+import { PROJECT_STATUSES, projectTypeLabel } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin | Highland Remodeling" }] }),
