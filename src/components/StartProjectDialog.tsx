@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -36,8 +35,13 @@ import {
   submitProjectRequest,
 } from "@/lib/intake.functions";
 
-export function StartProjectDialog({ trigger }: { trigger: React.ReactNode }) {
-  const navigate = useNavigate();
+export function StartProjectDialog({
+  trigger,
+  onCreated,
+}: {
+  trigger: React.ReactNode;
+  onCreated?: (projectId: string) => void;
+}) {
   const qc = useQueryClient();
   const createUpload = useServerFn(createIntakePhotoUpload);
   const submit = useServerFn(submitProjectRequest);
@@ -105,7 +109,7 @@ export function StartProjectDialog({ trigger }: { trigger: React.ReactNode }) {
       await qc.invalidateQueries({ queryKey: ["customer-projects"] });
       setOpen(false);
       reset();
-      navigate({ to: "/dashboard", search: { project: res.projectId } as never });
+      onCreated?.(res.projectId);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not submit"),
   });
