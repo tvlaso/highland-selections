@@ -280,7 +280,15 @@ function ProjectView({
   approveMut,
   changeMut,
 }: {
-  project: { id: string; name: string; status: string; address: string | null; start_date: string | null };
+  project: {
+    id: string;
+    name: string;
+    status: string;
+    address: string | null;
+    start_date: string | null;
+    project_type?: string | null;
+    project_description?: string | null;
+  };
   isCompleted: boolean;
   isLoading: boolean;
   updates: { id: string; title: string; body: string | null; created_at: string }[];
@@ -303,6 +311,11 @@ function ProjectView({
           </span>
         </div>
         <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-[oklch(0.88_0.02_255)]">
+          {project.project_type && (
+            <span className="inline-flex items-center gap-1.5">
+              {projectTypeLabel(project.project_type)}
+            </span>
+          )}
           {project.address && (
             <span className="inline-flex items-center gap-1.5">
               <MapPin className="h-4 w-4" /> {project.address}
@@ -316,6 +329,13 @@ function ProjectView({
           )}
         </div>
       </section>
+
+      {project.project_description && (
+        <section className="mt-4 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+          <h2 className="mb-1 text-sm font-semibold">Project Description</h2>
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{project.project_description}</p>
+        </section>
+      )}
 
       {isCompleted && (
         <p className="mt-4 rounded-lg border border-border bg-secondary px-4 py-2 text-sm text-muted-foreground">
