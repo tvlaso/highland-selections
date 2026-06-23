@@ -747,3 +747,152 @@ function AddFromCatalogDialog({
     </Dialog>
   );
 }
+
+type ProjectCustomerInfo = {
+  customer_id: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  project_address: string | null;
+  address: string | null;
+};
+
+function EditCustomerInfoDialog({
+  open,
+  onOpenChange,
+  projectId,
+  project,
+  customers,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  projectId: string;
+  project: ProjectCustomerInfo;
+  customers: { id: string; full_name: string | null; email: string | null }[];
+  onSaved: () => void;
+}) {
+  const UNASSIGNED = "__unassigned__";
+  const [customerId, setCustomerId] = useState<string>(project.customer_id ?? UNASSIGNED);
+  const [name, setName] = useState(project.customer_name ?? "");
+  const [phone, setPhone] = useState(project.customer_phone ?? "");
+  const [email, setEmail] = useState(project.customer_email ?? "");
+  const [address, setAddress] = useState(project.project_address ?? project.address ?? "");
+
+  useEffect(() => {
+    if (open) {
+      setCustomerId(project.customer_id ?? UNASSIGNED);
+      setName(project.customer_name ?? "");
+      setPhone(project.customer_phone ?? "");
+      setEmail(project.customer_email ?? "");
+      setAddress(project.project_address ?? project.address ?? "");
+    }
+  }, [open, project]);
+
+  const saveMut = useMutation({
+    mutationFn: async () => {
+      const newCustomerId = customerId === UNASSIGNED ? null : customerId;
+      const customerChanged = newCustomerId !== (project.customer_id ?? null);
+
+      const { error } = await supabase
+        .from("projects")
+        .update({
+          customer_id: newCustomerId,
+          customer_name: name.trim() || null,
+          customer_phone: phone.trim() || null,
+          customer_email: email.trim() || null,
+          project_address: address.trim() || null,
+          address: address.trim() || null,
+        })
+        .eq("id", projectId);
+      if (error) throw error;
+
+      const events: { title: string; description: string }[] = [
+        {
+          title: "Customer information updated",
+          description: "An admin updated the customer contact details for this project",
+        },
+      ];
+      if (customerChanged) {
+        const newName =
+          customers.find((c) => c.id === newCustomerId)?.full_name ??
+          customers.find((c) => c.id === newCustomerId)?.email ??
+          (newCustomerId ? "a customer" : "no one");
+        events.push({
+          title: "Customer assigned to project changed",
+          description: `The assigned customer was changed to ${newName}`,
+        });
+      }
+      await supabase.from("project_timeline_events").insert(
+        events.map((e) => ({
+          project_id: projectId,
+          category: "project",
+          title: e.title,
+          description: e.description,
+        })),
+      );
+    },
+    onSuccess: () => {
+      toast.success("Customer info saved");
+      onSaved();
+      onOpenChange(false);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save"),
+  });
+
+  const emailOk = email.trim() === "" || isValidEmail(email);
+  const phoneOk = phone.trim() === "" || isValidPhone(phone);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Customer Info</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Assigned Customer</Label>
+            <Select value={customerId} onValueChange={setCustomerId}>
+              <SelectTrigger><SelectValue placeholder="Select a customer" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
+                {customers.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.full_name || "—"} — {c.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Full Name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Phone Number</Label>
+            <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            {!phoneOk && <p className="text-xs text-destructive">Enter a valid phone number.</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Email Address</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            {!emailOk && <p className="text-xs text-destructive">Enter a valid email address.</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Project Address</Label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="hero"
+            disabled={saveMut.isPending || !emailOk || !phoneOk}
+            onClick={() => saveMut.mutate()}
+          >
+            {saveMut.isPending ? "Saving…" : "Save Customer Info"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
