@@ -26,11 +26,7 @@ import {
 import { SignedImage } from "@/components/SignedImage";
 import {
   PROJECT_TYPES,
-  CONTACT_METHODS,
   TIMELINE_OPTIONS,
-  BUDGET_RANGES,
-  isValidEmail,
-  isValidPhone,
 } from "@/lib/constants";
 import {
   createIntakePhotoUpload,
@@ -52,13 +48,8 @@ export function StartProjectDialog({
   const [open, setOpen] = useState(false);
   const [projectType, setProjectType] = useState("");
   const [description, setDescription] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [timeline, setTimeline] = useState("");
-  const [budget, setBudget] = useState("");
-  const [contactMethod, setContactMethod] = useState("");
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -66,13 +57,8 @@ export function StartProjectDialog({
   const reset = () => {
     setProjectType("");
     setDescription("");
-    setFullName("");
-    setPhone("");
-    setEmail("");
     setAddress("");
     setTimeline("");
-    setBudget("");
-    setContactMethod("");
     setNotes("");
     setPhotos([]);
   };
@@ -104,13 +90,10 @@ export function StartProjectDialog({
         data: {
           projectType: projectType as never,
           description,
-          fullName: fullName.trim(),
-          phone: phone.trim(),
-          email: email.trim(),
           address: address.trim(),
           timeline: timeline || null,
-          budget: budget || null,
-          contactMethod: contactMethod || null,
+          budget: null,
+          contactMethod: null,
           notes: notes || null,
           photos,
         },
@@ -126,11 +109,8 @@ export function StartProjectDialog({
   });
 
   const valid = projectType !== "" && description.trim().length > 0;
-  const emailOk = isValidEmail(email);
-  const phoneOk = isValidPhone(phone);
   const addressOk = address.trim().length > 0;
-  const nameOk = fullName.trim().length > 0;
-  const allValid = valid && emailOk && phoneOk && addressOk && nameOk;
+  const allValid = valid && addressOk;
 
   return (
     <Dialog
@@ -178,92 +158,21 @@ export function StartProjectDialog({
 
           <div className="space-y-1.5">
             <Label>
-              Full Name <span className="text-destructive">*</span>
-            </Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>
-                Phone Number <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="(555) 123-4567"
-              />
-              {phone.length > 0 && !phoneOk && (
-                <p className="text-xs text-destructive">Enter a valid phone number.</p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label>
-                Email Address <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-              />
-              {email.length > 0 && !emailOk && (
-                <p className="text-xs text-destructive">Enter a valid email address.</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>
               Project Address <span className="text-destructive">*</span>
             </Label>
             <Input value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Desired Timeline</Label>
-              <Select value={timeline} onValueChange={setTimeline}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIMELINE_OPTIONS.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Budget Range</Label>
-              <Select value={budget} onValueChange={setBudget}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {BUDGET_RANGES.map((b) => (
-                    <SelectItem key={b} value={b}>
-                      {b}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <div className="space-y-1.5">
-            <Label>Best Contact Method</Label>
-            <Select value={contactMethod} onValueChange={setContactMethod}>
+            <Label>Desired Timeline</Label>
+            <Select value={timeline} onValueChange={setTimeline}>
               <SelectTrigger>
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                {CONTACT_METHODS.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
+                {TIMELINE_OPTIONS.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
                   </SelectItem>
                 ))}
               </SelectContent>
