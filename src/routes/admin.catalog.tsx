@@ -114,6 +114,11 @@ function CatalogPage() {
                             Manufacturer PDF <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
+                        {i.product_link && (
+                          <a href={i.product_link} target="_blank" rel="noreferrer" className="ml-2 inline-flex items-center gap-1 text-sm text-accent hover:underline">
+                            Product link <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
                         <div className="mt-2 flex gap-1">
                           <Button variant="outline" size="sm" onClick={() => { setEditing(i as EditableCatalogItem); setDialogOpen(true); }}>
                             <Pencil className="h-3.5 w-3.5" /> Edit
