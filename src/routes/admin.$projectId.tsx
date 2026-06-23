@@ -451,6 +451,11 @@ function ProjectDetail() {
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/admin/catalog"><Library className="h-4 w-4" /> Catalog</Link>
                   </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin/checklist/$projectId" params={{ projectId }}>
+                      <ClipboardList className="h-4 w-4" /> Material Order Checklist
+                    </Link>
+                  </Button>
                   <Button variant="outline" size="sm" disabled={exporting || options.length === 0} onClick={handleExport}>
                     <FileDown className="h-4 w-4" /> {exporting ? "Exporting…" : "Export Selections List"}
                   </Button>
