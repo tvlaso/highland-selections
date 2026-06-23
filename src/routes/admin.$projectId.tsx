@@ -143,6 +143,21 @@ function ProjectDetail() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
   });
 
+  const statusMut = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from("project_selection_options")
+        .update({ status, ...(status !== "Change Requested" ? { customer_notes: null } : {}) })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      toast.success("Approval status updated");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not update status"),
+  });
+
   const reorderMut = useMutation({
     mutationFn: async (rows: { id: string; sort_order: number }[]) => {
       for (const r of rows) {
