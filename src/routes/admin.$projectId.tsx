@@ -143,6 +143,21 @@ function ProjectDetail() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
   });
 
+  const statusMut = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from("project_selection_options")
+        .update({ status, ...(status !== "Change Requested" ? { customer_notes: null } : {}) })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      toast.success("Approval status updated");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not update status"),
+  });
+
   const reorderMut = useMutation({
     mutationFn: async (rows: { id: string; sort_order: number }[]) => {
       for (const r of rows) {
@@ -463,19 +478,17 @@ function ProjectDetail() {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
                                   <h4 className="truncate font-semibold">{c?.product_name ?? "Unknown product"}</h4>
-                                  {o.status === "Approved" ? (
-                                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-[oklch(0.45_0.13_150)]">
-                                      <Check className="h-3 w-3" /> Approved
-                                    </span>
-                                  ) : o.status === "Change Requested" ? (
-                                    <span className="inline-flex shrink-0 items-center rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
-                                      Change Requested
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex shrink-0 items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                                      Pending
-                                    </span>
-                                  )}
+                                  <Select
+                                    value={o.status || "Pending"}
+                                    onValueChange={(v) => statusMut.mutate({ id: o.id, status: v })}
+                                  >
+                                    <SelectTrigger className="h-7 w-40 shrink-0 text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Pending">Pending</SelectItem>
+                                      <SelectItem value="Approved">Approved</SelectItem>
+                                      <SelectItem value="Change Requested">Change Requested</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {c?.vendor ? `${c.vendor} · ` : ""}{formatCurrency(c?.price)}

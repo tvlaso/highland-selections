@@ -346,7 +346,7 @@ export async function generatePmSpecPdf(args: ExportArgs) {
       doc.setFontSize(9);
       doc.setTextColor(...gray);
       doc.text(
-        `Vendor: ${c?.vendor || "—"}    Price: ${money(c?.price)}    Status: ${o.status || "Pending"}`,
+        `Vendor: ${c?.vendor || "—"}    Status: ${o.status || "Pending"}`,
         tx,
         ty,
       );

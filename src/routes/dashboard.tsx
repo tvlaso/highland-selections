@@ -13,7 +13,7 @@ import { SelectionNotes } from "@/components/SelectionNotes";
 import { StartProjectDialog } from "@/components/StartProjectDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CATEGORIES, formatCurrency, projectTypeLabel } from "@/lib/constants";
+import { CATEGORIES, projectTypeLabel } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
 import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 
@@ -435,7 +435,6 @@ function ProjectView({
                                 )}
                               </div>
                               {c?.vendor && <p className="text-sm text-muted-foreground">{c.vendor}</p>}
-                              <p className="text-sm font-medium text-foreground">{formatCurrency(c?.price)}</p>
                               {c?.description && (
                                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
                               )}
