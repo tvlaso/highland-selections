@@ -207,6 +207,7 @@ export function DesignsGallery({
             <SignedImage
               path={lightbox}
               alt="design photo"
+              bucket="design-assets"
               className="max-h-[85vh] w-full rounded-lg object-contain"
             />
           </DialogContent>
