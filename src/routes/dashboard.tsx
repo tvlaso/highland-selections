@@ -250,8 +250,6 @@ function Dashboard() {
                         categoriesWithOptions={categoriesWithOptions}
                         exporting={exporting}
                         onExport={handleExport}
-                        noteDrafts={noteDrafts}
-                        setNoteDrafts={setNoteDrafts}
                         approveMut={approveMut}
                         changeMut={changeMut}
                       />
