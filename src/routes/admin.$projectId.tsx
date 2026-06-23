@@ -86,11 +86,19 @@ function ProjectDetail() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const syncVersion = useServerFn(syncSelectionsVersion);
+  const listCustomersFn = useServerFn(listCustomers);
   const [exporting, setExporting] = useState(false);
   const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
   const [descDraft, setDescDraft] = useState("");
   const [typeDraft, setTypeDraft] = useState("");
+  const [custOpen, setCustOpen] = useState(false);
+
+  const customers = useQuery({
+    queryKey: ["customers"],
+    enabled: role === "admin",
+    queryFn: () => listCustomersFn(),
+  });
 
   useEffect(() => {
     if (loading) return;
