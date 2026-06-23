@@ -15,8 +15,10 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as DesignsProjectIdRouteImport } from './routes/designs.$projectId'
 import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
 import { Route as AdminProjectIdRouteImport } from './routes/admin.$projectId'
+import { Route as AdminDesignsProjectIdRouteImport } from './routes/admin.designs.$projectId'
 import { Route as AdminChecklistProjectIdRouteImport } from './routes/admin.checklist.$projectId'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -49,6 +51,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DesignsProjectIdRoute = DesignsProjectIdRouteImport.update({
+  id: '/designs/$projectId',
+  path: '/designs/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCatalogRoute = AdminCatalogRouteImport.update({
   id: '/admin/catalog',
   path: '/admin/catalog',
@@ -57,6 +64,11 @@ const AdminCatalogRoute = AdminCatalogRouteImport.update({
 const AdminProjectIdRoute = AdminProjectIdRouteImport.update({
   id: '/admin/$projectId',
   path: '/admin/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDesignsProjectIdRoute = AdminDesignsProjectIdRouteImport.update({
+  id: '/admin/designs/$projectId',
+  path: '/admin/designs/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminChecklistProjectIdRoute = AdminChecklistProjectIdRouteImport.update({
@@ -73,8 +85,10 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
+  '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
+  '/admin/designs/$projectId': typeof AdminDesignsProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,8 +98,10 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
+  '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
+  '/admin/designs/$projectId': typeof AdminDesignsProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,8 +112,10 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
+  '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
+  '/admin/designs/$projectId': typeof AdminDesignsProjectIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -109,8 +127,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/$projectId'
     | '/admin/catalog'
+    | '/designs/$projectId'
     | '/admin/'
     | '/admin/checklist/$projectId'
+    | '/admin/designs/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -120,8 +140,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/$projectId'
     | '/admin/catalog'
+    | '/designs/$projectId'
     | '/admin'
     | '/admin/checklist/$projectId'
+    | '/admin/designs/$projectId'
   id:
     | '__root__'
     | '/'
@@ -131,8 +153,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/$projectId'
     | '/admin/catalog'
+    | '/designs/$projectId'
     | '/admin/'
     | '/admin/checklist/$projectId'
+    | '/admin/designs/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -143,8 +167,10 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AdminProjectIdRoute: typeof AdminProjectIdRoute
   AdminCatalogRoute: typeof AdminCatalogRoute
+  DesignsProjectIdRoute: typeof DesignsProjectIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminChecklistProjectIdRoute: typeof AdminChecklistProjectIdRoute
+  AdminDesignsProjectIdRoute: typeof AdminDesignsProjectIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -191,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/designs/$projectId': {
+      id: '/designs/$projectId'
+      path: '/designs/$projectId'
+      fullPath: '/designs/$projectId'
+      preLoaderRoute: typeof DesignsProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/catalog': {
       id: '/admin/catalog'
       path: '/admin/catalog'
@@ -203,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/$projectId'
       fullPath: '/admin/$projectId'
       preLoaderRoute: typeof AdminProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/designs/$projectId': {
+      id: '/admin/designs/$projectId'
+      path: '/admin/designs/$projectId'
+      fullPath: '/admin/designs/$projectId'
+      preLoaderRoute: typeof AdminDesignsProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/checklist/$projectId': {
@@ -223,8 +263,10 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AdminProjectIdRoute: AdminProjectIdRoute,
   AdminCatalogRoute: AdminCatalogRoute,
+  DesignsProjectIdRoute: DesignsProjectIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminChecklistProjectIdRoute: AdminChecklistProjectIdRoute,
+  AdminDesignsProjectIdRoute: AdminDesignsProjectIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
