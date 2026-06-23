@@ -82,11 +82,18 @@ export const listCustomers = createServerFn({ method: "GET" })
     if (rErr) throw new Error(rErr.message);
 
     const ids = (roles ?? []).map((r) => r.user_id);
-    if (ids.length === 0) return [] as { id: string; full_name: string | null; email: string | null }[];
+    if (ids.length === 0)
+      return [] as {
+        id: string;
+        full_name: string | null;
+        email: string | null;
+        phone: string | null;
+        address: string | null;
+      }[];
 
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email")
+      .select("id, full_name, email, phone, address")
       .in("id", ids);
     if (pErr) throw new Error(pErr.message);
 

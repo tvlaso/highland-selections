@@ -243,6 +243,7 @@ function Dashboard() {
                     {project && (
                       <ProjectView
                         project={project}
+                        fallbackEmail={session?.user?.email ?? null}
                         isCompleted={isCompleted}
                         isLoading={isLoading}
                         updates={data?.updates ?? []}
@@ -269,6 +270,7 @@ function Dashboard() {
 
 function ProjectView({
   project,
+  fallbackEmail,
   isCompleted,
   isLoading,
   updates,
@@ -294,6 +296,7 @@ function ProjectView({
     customer_phone?: string | null;
     customer_email?: string | null;
   };
+  fallbackEmail: string | null;
   isCompleted: boolean;
   isLoading: boolean;
   updates: { id: string; title: string; body: string | null; created_at: string }[];
@@ -321,26 +324,18 @@ function ProjectView({
               {projectTypeLabel(project.project_type)}
             </span>
           )}
-          {(project.project_address || project.address) && (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-4 w-4" /> {project.project_address || project.address}
-            </span>
-          )}
-          {project.customer_name && (
-            <span className="inline-flex items-center gap-1.5">
-              <User className="h-4 w-4" /> {project.customer_name}
-            </span>
-          )}
-          {project.customer_phone && (
-            <span className="inline-flex items-center gap-1.5">
-              <Phone className="h-4 w-4" /> {project.customer_phone}
-            </span>
-          )}
-          {project.customer_email && (
-            <span className="inline-flex items-center gap-1.5">
-              <Mail className="h-4 w-4" /> {project.customer_email}
-            </span>
-          )}
+          <span className="inline-flex items-center gap-1.5">
+            <User className="h-4 w-4" /> {project.customer_name || "Not provided"}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Phone className="h-4 w-4" /> {project.customer_phone || "Not provided"}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Mail className="h-4 w-4" /> {project.customer_email || fallbackEmail || "Not provided"}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin className="h-4 w-4" /> {project.project_address || project.address || "Not provided"}
+          </span>
           {project.start_date && (
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="h-4 w-4" /> Started{" "}

@@ -188,6 +188,38 @@ function ProjectDetail() {
 
   const options = data?.options ?? [];
 
+  const assignedProfile =
+    (customers.data ?? []).find((c) => c.id === data?.project?.customer_id) ?? null;
+
+  // Backfill empty project snapshot fields from the assigned customer profile.
+  useEffect(() => {
+    const project = data?.project;
+    if (!project || !project.customer_id || !assignedProfile) return;
+    const patch: {
+      customer_name?: string;
+      customer_phone?: string;
+      customer_email?: string;
+      project_address?: string;
+      address?: string;
+    } = {};
+    if (!project.customer_name && assignedProfile.full_name)
+      patch.customer_name = assignedProfile.full_name;
+    if (!project.customer_phone && assignedProfile.phone)
+      patch.customer_phone = assignedProfile.phone;
+    if (!project.customer_email && assignedProfile.email)
+      patch.customer_email = assignedProfile.email;
+    if (!project.project_address && !project.address && assignedProfile.address) {
+      patch.project_address = assignedProfile.address;
+      patch.address = assignedProfile.address;
+    }
+    if (Object.keys(patch).length === 0) return;
+    (async () => {
+      const { error } = await supabase.from("projects").update(patch).eq("id", project.id);
+      if (!error) qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.project, assignedProfile]);
+
   const timeline = useQuery({
     queryKey: ["admin-timeline", projectId],
     enabled: role === "admin",
@@ -343,16 +375,20 @@ function ProjectDetail() {
 
               <div className="mt-4 grid gap-x-6 gap-y-1.5 text-sm text-[oklch(0.92_0.02_255)] sm:grid-cols-2">
                 <span className="inline-flex items-center gap-1.5">
-                  <User className="h-4 w-4" /> {project.customer_name || "No name on file"}
+                  <User className="h-4 w-4" />{" "}
+                  {project.customer_name || assignedProfile?.full_name || assignedProfile?.email || "Not provided"}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Phone className="h-4 w-4" /> {project.customer_phone || "No phone"}
+                  <Phone className="h-4 w-4" />{" "}
+                  {project.customer_phone || assignedProfile?.phone || "Not provided"}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Mail className="h-4 w-4" /> {project.customer_email || "No email"}
+                  <Mail className="h-4 w-4" />{" "}
+                  {project.customer_email || assignedProfile?.email || "Not provided"}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4" /> {project.project_address || project.address || "No address"}
+                  <MapPin className="h-4 w-4" />{" "}
+                  {project.project_address || project.address || assignedProfile?.address || "Not provided"}
                 </span>
               </div>
 
@@ -747,7 +783,7 @@ function EditCustomerInfoDialog({
 
       const events: { title: string; description: string }[] = [
         {
-          title: "Banner details updated",
+          title: "Customer info updated",
           description: "An admin updated the project and customer details for this project",
         },
       ];

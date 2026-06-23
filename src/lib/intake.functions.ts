@@ -77,6 +77,16 @@ export const submitProjectRequest = createServerFn({ method: "POST" })
 
     const customerLabel = data.fullName || data.email || "New Customer";
 
+    // Keep the customer's profile in sync with the latest contact details.
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        full_name: data.fullName,
+        phone: data.phone,
+        address: data.address,
+      })
+      .eq("id", context.userId);
+
     const { data: project, error } = await supabaseAdmin
       .from("projects")
       .insert({
