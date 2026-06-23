@@ -352,8 +352,46 @@ function ProjectDetail() {
         ) : (
           <>
             <section className="rounded-2xl bg-[image:var(--gradient-navy)] p-6 text-[oklch(0.97_0.01_255)] shadow-[var(--shadow-soft)]">
-              <h1 className="text-2xl font-bold text-[oklch(0.99_0.005_250)]">{project.name}</h1>
-              <p className="mt-1 text-sm text-[oklch(0.88_0.02_255)]">{project.address || "No address"}</p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-bold text-[oklch(0.99_0.005_250)]">{project.name}</h1>
+                  {project.project_type && (
+                    <p className="mt-1 text-sm text-[oklch(0.88_0.02_255)]">
+                      {PROJECT_TYPES.find((t) => t.value === project.project_type)?.label ?? project.project_type}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 bg-card text-foreground"
+                  onClick={() => setCustOpen(true)}
+                >
+                  <Pencil className="h-4 w-4" /> Edit Customer Info
+                </Button>
+              </div>
+
+              <div className="mt-4 grid gap-x-6 gap-y-1.5 text-sm text-[oklch(0.92_0.02_255)] sm:grid-cols-2">
+                <span className="inline-flex items-center gap-1.5">
+                  <User className="h-4 w-4" /> {project.customer_name || "No name on file"}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Phone className="h-4 w-4" /> {project.customer_phone || "No phone"}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Mail className="h-4 w-4" /> {project.customer_email || "No email"}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4" /> {project.project_address || project.address || "No address"}
+                </span>
+              </div>
+
+              {project.project_description && (
+                <p className="mt-3 whitespace-pre-wrap text-sm text-[oklch(0.88_0.02_255)]">
+                  {project.project_description}
+                </p>
+              )}
+
               <div className="mt-4 flex items-center gap-2">
                 <span className="text-sm text-[oklch(0.88_0.02_255)]">Status:</span>
                 <Select value={project.status} onValueChange={(v) => statusMut.mutate(v)}>
@@ -364,6 +402,18 @@ function ProjectDetail() {
                 </Select>
               </div>
             </section>
+
+            <EditCustomerInfoDialog
+              open={custOpen}
+              onOpenChange={setCustOpen}
+              projectId={projectId}
+              project={project}
+              customers={customers.data ?? []}
+              onSaved={() => {
+                qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+                qc.invalidateQueries({ queryKey: ["admin-timeline", projectId] });
+              }}
+            />
 
             {/* Project type & description */}
             <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
