@@ -783,7 +783,7 @@ function EditCustomerInfoDialog({
 
       const events: { title: string; description: string }[] = [
         {
-          title: "Banner details updated",
+          title: "Customer info updated",
           description: "An admin updated the project and customer details for this project",
         },
       ];
