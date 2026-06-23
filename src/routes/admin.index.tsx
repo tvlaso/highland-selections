@@ -27,6 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PROJECT_STATUSES, projectTypeLabel } from "@/lib/constants";
 
@@ -198,6 +204,24 @@ function AdminHome() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
+  const statusMut = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("projects").update({ status }).eq("id", id);
+      if (error) throw error;
+      await supabase.from("project_timeline_events").insert({
+        project_id: id,
+        category: "project",
+        title: "Project status updated",
+        description: `Status changed to ${status}`,
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-projects"] });
+      toast.success("Status updated");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
   const renderProject = (p: (typeof allProjects)[number]) => (
     <Link
       key={p.id}
@@ -208,9 +232,40 @@ function AdminHome() {
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <h3 className="truncate font-semibold">{p.name}</h3>
-          <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-            {p.status}
-          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
+              >
+                {p.status}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              {PROJECT_STATUSES.map((s) => (
+                <DropdownMenuItem
+                  key={s}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    if (s !== p.status) statusMut.mutate({ id: p.id, status: s });
+                  }}
+                >
+                  {s === p.status && <Check className="h-4 w-4" />}
+                  <span className={s === p.status ? "font-semibold" : ""}>{s}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <p className="mt-0.5 truncate text-sm text-muted-foreground">
           {projectTypeLabel(p.project_type) && (
