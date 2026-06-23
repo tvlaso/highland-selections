@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, PROJECT_STATUSES, PROJECT_TYPES, formatCurrency, isValidEmail, isValidPhone } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
-import { generateSelectionsPdf, generatePmSpecPdf } from "@/lib/exportSelectionsPdf";
+import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 import { listCustomers } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/$projectId")({
@@ -88,7 +88,6 @@ function ProjectDetail() {
   const syncVersion = useServerFn(syncSelectionsVersion);
   const listCustomersFn = useServerFn(listCustomers);
   const [exporting, setExporting] = useState(false);
-  const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
   const [custOpen, setCustOpen] = useState(false);
 
