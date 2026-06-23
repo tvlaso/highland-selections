@@ -195,7 +195,13 @@ function ProjectDetail() {
   useEffect(() => {
     const project = data?.project;
     if (!project || !project.customer_id || !assignedProfile) return;
-    const patch: Record<string, string> = {};
+    const patch: {
+      customer_name?: string;
+      customer_phone?: string;
+      customer_email?: string;
+      project_address?: string;
+      address?: string;
+    } = {};
     if (!project.customer_name && assignedProfile.full_name)
       patch.customer_name = assignedProfile.full_name;
     if (!project.customer_phone && assignedProfile.phone)
