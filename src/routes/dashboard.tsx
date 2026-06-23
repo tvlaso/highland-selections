@@ -164,10 +164,10 @@ function Dashboard() {
   });
 
   const changeMut = useMutation({
-    mutationFn: async ({ id, note }: { id: string; note: string }) => {
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("project_selection_options")
-        .update({ status: "Change Requested", customer_notes: note || null })
+        .update({ status: "Change Requested" })
         .eq("id", id);
       if (error) throw error;
     },
