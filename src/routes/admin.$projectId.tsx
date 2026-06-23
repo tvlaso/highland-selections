@@ -375,16 +375,20 @@ function ProjectDetail() {
 
               <div className="mt-4 grid gap-x-6 gap-y-1.5 text-sm text-[oklch(0.92_0.02_255)] sm:grid-cols-2">
                 <span className="inline-flex items-center gap-1.5">
-                  <User className="h-4 w-4" /> {project.customer_name || "No name on file"}
+                  <User className="h-4 w-4" />{" "}
+                  {project.customer_name || assignedProfile?.full_name || assignedProfile?.email || "Not provided"}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Phone className="h-4 w-4" /> {project.customer_phone || "No phone"}
+                  <Phone className="h-4 w-4" />{" "}
+                  {project.customer_phone || assignedProfile?.phone || "Not provided"}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Mail className="h-4 w-4" /> {project.customer_email || "No email"}
+                  <Mail className="h-4 w-4" />{" "}
+                  {project.customer_email || assignedProfile?.email || "Not provided"}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4" /> {project.project_address || project.address || "No address"}
+                  <MapPin className="h-4 w-4" />{" "}
+                  {project.project_address || project.address || assignedProfile?.address || "Not provided"}
                 </span>
               </div>
 
