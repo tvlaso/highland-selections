@@ -286,52 +286,6 @@ function ProjectDetail() {
     }
   };
 
-  const resolveCustomerName = async () => {
-    if (!data?.project?.customer_id) return "—";
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", data.project.customer_id)
-      .maybeSingle();
-    return prof?.full_name || prof?.email || "—";
-  };
-
-  const handleExportPm = async () => {
-    if (!data?.project) return;
-    setExportingPm(true);
-    try {
-      const customerName = await resolveCustomerName();
-      const { version, lastModified } = await syncVersion({ data: { projectId } });
-      await generatePmSpecPdf({
-        projectName: data.project.name,
-        customerName,
-        address: data.project.address,
-        version,
-        lastModified,
-        options: options.map((o) => ({
-          id: o.id,
-          category: o.category,
-          customer_notes: o.customer_notes,
-          status: o.status,
-          master_catalog: o.master_catalog
-            ? {
-                product_name: o.master_catalog.product_name,
-                vendor: o.master_catalog.vendor,
-                image_url: o.master_catalog.image_url,
-                product_url: o.master_catalog.product_url,
-                price: o.master_catalog.price,
-                description: o.master_catalog.description,
-              }
-            : null,
-        })),
-      });
-      qc.invalidateQueries({ queryKey: ["admin-timeline", projectId] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not export PDF");
-    } finally {
-      setExportingPm(false);
-    }
-  };
 
   const move = (cat: string, index: number, dir: -1 | 1) => {
     const items = options.filter((o) => o.category === cat);
