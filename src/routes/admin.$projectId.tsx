@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
 import { SignedImage } from "@/components/SignedImage";
+import { EnlargeableImage } from "@/components/EnlargeableImage";
+import { SelectionNotes } from "@/components/SelectionNotes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +41,7 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, PROJECT_STATUSES, formatCurrency } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
-import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
+import { generateSelectionsPdf, generatePmSpecPdf } from "@/lib/exportSelectionsPdf";
 
 export const Route = createFileRoute("/admin/$projectId")({
   head: () => ({ meta: [{ title: "Manage Project | Highland Remodeling" }] }),
@@ -77,6 +79,7 @@ function ProjectDetail() {
   const qc = useQueryClient();
   const syncVersion = useServerFn(syncSelectionsVersion);
   const [exporting, setExporting] = useState(false);
+  const [exportingPm, setExportingPm] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
 
   useEffect(() => {
@@ -226,6 +229,53 @@ function ProjectDetail() {
       toast.error(e instanceof Error ? e.message : "Could not export PDF");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const resolveCustomerName = async () => {
+    if (!data?.project?.customer_id) return "—";
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", data.project.customer_id)
+      .maybeSingle();
+    return prof?.full_name || prof?.email || "—";
+  };
+
+  const handleExportPm = async () => {
+    if (!data?.project) return;
+    setExportingPm(true);
+    try {
+      const customerName = await resolveCustomerName();
+      const { version, lastModified } = await syncVersion({ data: { projectId } });
+      await generatePmSpecPdf({
+        projectName: data.project.name,
+        customerName,
+        address: data.project.address,
+        version,
+        lastModified,
+        options: options.map((o) => ({
+          id: o.id,
+          category: o.category,
+          customer_notes: o.customer_notes,
+          status: o.status,
+          master_catalog: o.master_catalog
+            ? {
+                product_name: o.master_catalog.product_name,
+                vendor: o.master_catalog.vendor,
+                image_url: o.master_catalog.image_url,
+                product_url: o.master_catalog.product_url,
+                price: o.master_catalog.price,
+                description: o.master_catalog.description,
+              }
+            : null,
+        })),
+      });
+      qc.invalidateQueries({ queryKey: ["admin-timeline", projectId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not export PDF");
+    } finally {
+      setExportingPm(false);
     }
   };
 
