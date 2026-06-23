@@ -36,6 +36,7 @@ export interface EditableCatalogItem {
   price: number | null;
   image_url: string | null;
   product_url: string | null;
+  product_link: string | null;
   sku: string | null;
   finish: string | null;
   description: string | null;
@@ -50,6 +51,7 @@ const blank = (): EditableCatalogItem => ({
   price: null,
   image_url: null,
   product_url: null,
+  product_link: null,
   sku: null,
   finish: null,
   description: null,
@@ -104,6 +106,7 @@ export function CatalogDialog({
         price: form.price,
         image_url: form.image_url,
         product_url: form.product_url || null,
+        product_link: form.product_link || null,
         sku: form.sku || null,
         finish: form.finish || null,
         description: form.description || null,
@@ -190,6 +193,14 @@ export function CatalogDialog({
               value={form.product_url ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, product_url: e.target.value }))}
               placeholder="https://… (link to manufacturer spec sheet / PDF)"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Product link</Label>
+            <Input
+              value={form.product_link ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, product_link: e.target.value }))}
+              placeholder="https://… (link to product page / retailer)"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
