@@ -3,13 +3,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useServerFn } from "@tanstack/react-start";
-import { claimAdmin } from "@/lib/admin.functions";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -24,14 +21,12 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { session, role, loading, refreshRole } = useAuth();
-  const claim = useServerFn(claimAdmin);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [isContractor, setIsContractor] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -54,17 +49,6 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        if (isContractor) {
-          try {
-            await claim();
-          } catch (err) {
-            console.warn("Admin claim skipped:", err);
-          }
-          await refreshRole();
-          toast.success("Contractor account ready!");
-          navigate({ to: "/admin" });
-          return;
-        }
         await refreshRole();
         toast.success("Account created!");
       } else {
@@ -203,19 +187,6 @@ function AuthPage() {
                   required
                 />
               </div>
-
-              {mode === "signup" && (
-                <label className="flex items-start gap-2.5 rounded-lg bg-secondary p-3 text-sm">
-                  <Checkbox
-                    checked={isContractor}
-                    onCheckedChange={(v) => setIsContractor(Boolean(v))}
-                    className="mt-0.5"
-                  />
-                  <span className="text-muted-foreground">
-                    I'm the contractor setting up the company admin account.
-                  </span>
-                </label>
-              )}
 
               {mode === "signin" && (
                 <button
