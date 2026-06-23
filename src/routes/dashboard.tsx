@@ -13,7 +13,7 @@ import { SelectionNotes } from "@/components/SelectionNotes";
 import { StartProjectDialog } from "@/components/StartProjectDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { CATEGORIES, formatCurrency, projectTypeLabel } from "@/lib/constants";
+import { CATEGORIES, projectTypeLabel } from "@/lib/constants";
 import { syncSelectionsVersion } from "@/lib/selections.functions";
 import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 
