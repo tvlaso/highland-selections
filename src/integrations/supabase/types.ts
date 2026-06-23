@@ -68,6 +68,60 @@ export type Database = {
         }
         Relationships: []
       }
+      material_checklist_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          is_manual: boolean
+          material_name: string
+          notes: string | null
+          option_id: string | null
+          ordered: boolean
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_manual?: boolean
+          material_name?: string
+          notes?: string | null
+          option_id?: string | null
+          ordered?: boolean
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_manual?: boolean
+          material_name?: string
+          notes?: string | null
+          option_id?: string | null
+          ordered?: boolean
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_checklist_items_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "project_selection_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_checklist_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
