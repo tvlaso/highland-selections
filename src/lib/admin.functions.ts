@@ -100,6 +100,66 @@ export const listCustomers = createServerFn({ method: "GET" })
     return profiles ?? [];
   });
 
+/** Updates a customer's profile fields. Admin-only. */
+export const updateCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        fullName: z.string().min(1),
+        email: z.string().email(),
+        phone: z.string().optional().nullable(),
+        address: z.string().optional().nullable(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(data.id, {
+      email: data.email,
+    });
+    if (authErr) throw new Error(authErr.message);
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        full_name: data.fullName,
+        email: data.email,
+        phone: data.phone ?? null,
+        address: data.address ?? null,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    return { success: true };
+  });
+
+/** Deletes a customer account entirely. Admin-only. */
+export const deleteCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.id);
+    if (error) throw new Error(error.message);
+
+    return { success: true };
+  });
+
 /** Creates a short-lived upload token for product photos. Admin-only. */
 export const createProductPhotoUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
