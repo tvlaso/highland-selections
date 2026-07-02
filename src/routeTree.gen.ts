@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as DesignsProjectIdRouteImport } from './routes/designs.$projectId'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
 import { Route as AdminProjectIdRouteImport } from './routes/admin.$projectId'
 import { Route as AdminDesignsProjectIdRouteImport } from './routes/admin.designs.$projectId'
@@ -56,6 +57,11 @@ const DesignsProjectIdRoute = DesignsProjectIdRouteImport.update({
   path: '/designs/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/admin/customers',
+  path: '/admin/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCatalogRoute = AdminCatalogRouteImport.update({
   id: '/admin/catalog',
   path: '/admin/catalog',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
+  '/admin/customers': typeof AdminCustomersRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/$projectId'
     | '/admin/catalog'
+    | '/admin/customers'
     | '/designs/$projectId'
     | '/admin/'
     | '/admin/checklist/$projectId'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/$projectId'
     | '/admin/catalog'
+    | '/admin/customers'
     | '/designs/$projectId'
     | '/admin'
     | '/admin/checklist/$projectId'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/$projectId'
     | '/admin/catalog'
+    | '/admin/customers'
     | '/designs/$projectId'
     | '/admin/'
     | '/admin/checklist/$projectId'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AdminProjectIdRoute: typeof AdminProjectIdRoute
   AdminCatalogRoute: typeof AdminCatalogRoute
+  AdminCustomersRoute: typeof AdminCustomersRoute
   DesignsProjectIdRoute: typeof DesignsProjectIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminChecklistProjectIdRoute: typeof AdminChecklistProjectIdRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DesignsProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/admin/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/catalog': {
       id: '/admin/catalog'
       path: '/admin/catalog'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AdminProjectIdRoute: AdminProjectIdRoute,
   AdminCatalogRoute: AdminCatalogRoute,
+  AdminCustomersRoute: AdminCustomersRoute,
   DesignsProjectIdRoute: DesignsProjectIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminChecklistProjectIdRoute: AdminChecklistProjectIdRoute,

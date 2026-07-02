@@ -343,6 +343,9 @@ function AdminHome() {
             <Button variant="outline" asChild>
               <Link to="/admin/catalog"><Library className="h-4 w-4" /> Master Catalog</Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link to="/admin/customers"><Users className="h-4 w-4" /> Customers</Link>
+            </Button>
             <Dialog open={custOpen} onOpenChange={setCustOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline"><UserPlus className="h-4 w-4" /> Add Customer</Button>
