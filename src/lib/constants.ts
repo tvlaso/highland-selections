@@ -1,11 +1,13 @@
 export const CATEGORIES = [
   "Shower",
+  "Shower Glass",
   "Vanity",
   "Flooring",
   "Toilet",
   "Lighting",
   "Mirror",
   "Plumbing Trim",
+  "Tubs",
   "Accessories",
 ] as const;
 
