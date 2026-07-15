@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const PROJECT_TYPE_VALUES = [
   "bathroom_remodel",
   "kitchen_remodel",
+  "general_remodel",
   "flooring",
   "shower",
   "handyman",
@@ -54,6 +55,7 @@ export const submitProjectRequest = createServerFn({ method: "POST" })
     const typeLabel: Record<string, string> = {
       bathroom_remodel: "Bathroom Remodel",
       kitchen_remodel: "Kitchen Remodel",
+      general_remodel: "General Remodel",
       flooring: "Flooring",
       shower: "Shower",
       handyman: "Handyman",

@@ -27,6 +27,7 @@ export const PROJECT_STATUSES = [
 export const PROJECT_TYPES = [
   { value: "bathroom_remodel", label: "Bathroom Remodel" },
   { value: "kitchen_remodel", label: "Kitchen Remodel" },
+  { value: "general_remodel", label: "General Remodel" },
   { value: "flooring", label: "Flooring" },
   { value: "shower", label: "Shower" },
   { value: "handyman", label: "Handyman" },
