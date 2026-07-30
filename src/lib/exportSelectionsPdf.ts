@@ -234,8 +234,17 @@ async function buildSelectionsPdf(
       ensureSpace(rowH + 8);
       const top = y;
 
-      const raw = imgOpts.includePhotos ? await loadPhoto(c?.image_url) : null;
-      const photo = raw ? await compressImage(raw, imgOpts.maxDim, imgOpts.quality) : null;
+      let photo: { data: string; w: number; h: number } | null = null;
+      if (imgOpts.includePhotos && c?.image_url) {
+        const key = `${c.image_url}|${imgOpts.maxDim}|${imgOpts.quality}`;
+        if (compressedCache.has(key)) {
+          photo = compressedCache.get(key)!;
+        } else {
+          const raw = await loadPhoto(c.image_url);
+          photo = raw ? await compressImage(raw, imgOpts.maxDim, imgOpts.quality) : null;
+          compressedCache.set(key, photo);
+        }
+      }
       if (photo) {
         try {
           doc.addImage(photo.data, "JPEG", margin, top, imgSize, imgSize, undefined, "FAST");
