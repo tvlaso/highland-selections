@@ -153,10 +153,25 @@ export async function generateSelectionsPdf(args: ExportArgs) {
 
     for (const o of items) {
       const c = o.master_catalog;
-      const rowH = 92;
+      const imgSize = 76;
+      const tx = margin + imgSize + 16;
+      const tw = contentW - imgSize - 16;
+
+      const titleLines = doc.splitTextToSize(c?.product_name ?? "Unknown product", tw);
+      const vendorLines = c?.vendor ? doc.splitTextToSize(`Vendor: ${c.vendor}`, tw) : [];
+      const notesLines = o.customer_notes ? doc.splitTextToSize(`Customer notes: ${o.customer_notes}`, tw) : [];
+
+      const textBlockHeight =
+        12 + // top padding
+        titleLines.length * 15 + 3 +
+        (c?.vendor ? vendorLines.length * 14 + 3 : 0) +
+        (c?.product_url ? 14 + 3 : 0) +
+        (o.customer_notes ? notesLines.length * 11 + 3 : 0) +
+        6;
+      const rowH = Math.max(imgSize + 12, textBlockHeight);
+
       ensureSpace(rowH + 8);
       const top = y;
-      const imgSize = 76;
 
       const photo = await loadPhoto(c?.image_url);
       if (photo) {
@@ -173,35 +188,32 @@ export async function generateSelectionsPdf(args: ExportArgs) {
         doc.text("No photo", margin + imgSize / 2, top + imgSize / 2, { align: "center" });
       }
 
-      const tx = margin + imgSize + 16;
-      const tw = contentW - imgSize - 16;
       let ty = top + 12;
 
       doc.setFontSize(12);
       doc.setTextColor(20, 20, 20);
-      doc.text(c?.product_name ?? "Unknown product", tx, ty);
-      ty += 15;
+      doc.text(titleLines, tx, ty);
+      ty += titleLines.length * 15 + 3;
 
       if (c?.vendor) {
         doc.setFontSize(10);
         doc.setTextColor(...gray);
-        doc.text(`Vendor: ${c.vendor}`, tx, ty);
-        ty += 14;
+        doc.text(vendorLines, tx, ty);
+        ty += vendorLines.length * 14 + 3;
       }
 
       if (c?.product_url) {
         doc.setFontSize(10);
         doc.setTextColor(...orange);
         doc.textWithLink("Manufacturer PDF / Product Link", tx, ty, { url: c.product_url });
-        ty += 14;
+        ty += 14 + 3;
       }
 
       if (o.customer_notes) {
         doc.setFontSize(9);
         doc.setTextColor(70, 70, 70);
-        const notes = doc.splitTextToSize(`Customer notes: ${o.customer_notes}`, tw);
-        doc.text(notes, tx, ty);
-        ty += notes.length * 11;
+        doc.text(notesLines, tx, ty);
+        ty += notesLines.length * 11 + 3;
       }
 
       y = Math.max(top + imgSize, ty) + 12;
