@@ -63,6 +63,30 @@ async function loadPhoto(path: string | null | undefined) {
   return result;
 }
 
+/** Fetch all unique photos up front, in parallel (bounded), so the retry loop is cheap. */
+async function preloadPhotos(paths: string[]) {
+  const unique = Array.from(new Set(paths.filter(Boolean))).filter((p) => !rawPhotoCache.has(p));
+  if (unique.length === 0) return;
+  const signed = await supabase.storage.from("product-photos").createSignedUrls(unique, 3600);
+  const urls = new Map<string, string>();
+  (signed.data ?? []).forEach((s, i) => {
+    if (s?.signedUrl) urls.set(unique[i], s.signedUrl);
+  });
+  const CONCURRENCY = 8;
+  let cursor = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, unique.length) }, async () => {
+      while (cursor < unique.length) {
+        const path = unique[cursor++];
+        const url = urls.get(path);
+        rawPhotoCache.set(path, url ? await urlToDataUrl(url) : null);
+      }
+    }),
+  );
+}
+
+const compressedCache = new Map<string, { data: string; w: number; h: number } | null>();
+
 /** Re-encode an image as a downscaled JPEG to keep the PDF small. */
 async function compressImage(
   src: { data: string; w: number; h: number },
