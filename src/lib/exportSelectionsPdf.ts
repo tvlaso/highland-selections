@@ -308,12 +308,12 @@ const MAX_BYTES = 2 * 1024 * 1024;
 
 export async function generateSelectionsPdf(args: ExportArgs) {
   const attempts = [
-    { maxDim: 480, quality: 0.72, includePhotos: true },
-    { maxDim: 320, quality: 0.6, includePhotos: true },
-    { maxDim: 200, quality: 0.45, includePhotos: true },
-    { maxDim: 120, quality: 0.35, includePhotos: true },
+    { maxDim: 320, quality: 0.68, includePhotos: true },
+    { maxDim: 200, quality: 0.5, includePhotos: true },
     { maxDim: 120, quality: 0.35, includePhotos: false },
   ];
+
+  await preloadPhotos(args.options.map((o) => o.master_catalog?.image_url ?? "").filter(Boolean));
 
   let blob: Blob | null = null;
   let doc: jsPDF | null = null;
