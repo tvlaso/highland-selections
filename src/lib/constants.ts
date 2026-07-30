@@ -9,6 +9,10 @@ export const CATEGORIES = [
   "Plumbing Trim",
   "Tubs",
   "Accessories",
+  "Backsplash",
+  "Shower Tile",
+  "Kitchen Tile",
+  "Tile",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
