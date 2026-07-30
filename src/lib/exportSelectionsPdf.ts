@@ -52,11 +52,45 @@ async function urlToDataUrl(url: string): Promise<{ data: string; w: number; h: 
   }
 }
 
+const rawPhotoCache = new Map<string, { data: string; w: number; h: number } | null>();
+
 async function loadPhoto(path: string | null | undefined) {
   if (!path) return null;
+  if (rawPhotoCache.has(path)) return rawPhotoCache.get(path)!;
   const { data } = await supabase.storage.from("product-photos").createSignedUrl(path, 3600);
-  if (!data?.signedUrl) return null;
-  return urlToDataUrl(data.signedUrl);
+  const result = data?.signedUrl ? await urlToDataUrl(data.signedUrl) : null;
+  rawPhotoCache.set(path, result);
+  return result;
+}
+
+/** Re-encode an image as a downscaled JPEG to keep the PDF small. */
+async function compressImage(
+  src: { data: string; w: number; h: number },
+  maxDim: number,
+  quality: number,
+): Promise<{ data: string; w: number; h: number } | null> {
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = src.data;
+    });
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return src;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    return { data: canvas.toDataURL("image/jpeg", quality), w, h };
+  } catch {
+    return src;
+  }
 }
 
 function fmt(ts: string | null) {
@@ -64,10 +98,13 @@ function fmt(ts: string | null) {
   return new Date(ts).toLocaleString();
 }
 
-export async function generateSelectionsPdf(args: ExportArgs) {
+async function buildSelectionsPdf(
+  args: ExportArgs,
+  imgOpts: { maxDim: number; quality: number; includePhotos: boolean },
+) {
   const { projectName, customerName, address, version, lastModified, options } = args;
 
-  const doc = new jsPDF({ unit: "pt", format: "letter" });
+  const doc = new jsPDF({ unit: "pt", format: "letter", compress: true });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 48;
@@ -173,12 +210,13 @@ export async function generateSelectionsPdf(args: ExportArgs) {
       ensureSpace(rowH + 8);
       const top = y;
 
-      const photo = await loadPhoto(c?.image_url);
+      const raw = imgOpts.includePhotos ? await loadPhoto(c?.image_url) : null;
+      const photo = raw ? await compressImage(raw, imgOpts.maxDim, imgOpts.quality) : null;
       if (photo) {
         try {
-          doc.addImage(photo.data, "JPEG", margin, top, imgSize, imgSize);
+          doc.addImage(photo.data, "JPEG", margin, top, imgSize, imgSize, undefined, "FAST");
         } catch {
-          doc.addImage(photo.data, "PNG", margin, top, imgSize, imgSize);
+          doc.addImage(photo.data, "PNG", margin, top, imgSize, imgSize, undefined, "FAST");
         }
       } else {
         doc.setFillColor(238, 238, 238);
@@ -230,7 +268,41 @@ export async function generateSelectionsPdf(args: ExportArgs) {
   }
 
   footer();
+  return doc;
+}
 
-  const safe = projectName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-  doc.save(`selections-${safe}-v${version}.pdf`);
+const MAX_BYTES = 2 * 1024 * 1024;
+
+export async function generateSelectionsPdf(args: ExportArgs) {
+  const attempts = [
+    { maxDim: 480, quality: 0.72, includePhotos: true },
+    { maxDim: 320, quality: 0.6, includePhotos: true },
+    { maxDim: 200, quality: 0.45, includePhotos: true },
+    { maxDim: 120, quality: 0.35, includePhotos: true },
+    { maxDim: 120, quality: 0.35, includePhotos: false },
+  ];
+
+  let blob: Blob | null = null;
+  let doc: jsPDF | null = null;
+  for (const opts of attempts) {
+    doc = await buildSelectionsPdf(args, opts);
+    blob = doc.output("blob");
+    if (blob.size <= MAX_BYTES) break;
+  }
+
+  const safe = args.projectName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  const name = `selections-${safe}-v${args.version}.pdf`;
+
+  if (blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } else {
+    doc?.save(name);
+  }
 }
