@@ -9,32 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as DesignsProjectIdRouteImport } from './routes/designs.$projectId'
-import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
-import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
 import { Route as AdminProjectIdRouteImport } from './routes/admin.$projectId'
-import { Route as AdminDesignsProjectIdRouteImport } from './routes/admin.designs.$projectId'
+import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as DesignsProjectIdRouteImport } from './routes/designs.$projectId'
 import { Route as AdminChecklistProjectIdRouteImport } from './routes/admin.checklist.$projectId'
+import { Route as AdminDesignsProjectIdRouteImport } from './routes/admin.designs.$projectId'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -42,9 +32,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -52,14 +52,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DesignsProjectIdRoute = DesignsProjectIdRouteImport.update({
-  id: '/designs/$projectId',
-  path: '/designs/$projectId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminCustomersRoute = AdminCustomersRouteImport.update({
-  id: '/admin/customers',
-  path: '/admin/customers',
+const AdminProjectIdRoute = AdminProjectIdRouteImport.update({
+  id: '/admin/$projectId',
+  path: '/admin/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCatalogRoute = AdminCatalogRouteImport.update({
@@ -67,19 +62,24 @@ const AdminCatalogRoute = AdminCatalogRouteImport.update({
   path: '/admin/catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminProjectIdRoute = AdminProjectIdRouteImport.update({
-  id: '/admin/$projectId',
-  path: '/admin/$projectId',
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/admin/customers',
+  path: '/admin/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminDesignsProjectIdRoute = AdminDesignsProjectIdRouteImport.update({
-  id: '/admin/designs/$projectId',
-  path: '/admin/designs/$projectId',
+const DesignsProjectIdRoute = DesignsProjectIdRouteImport.update({
+  id: '/designs/$projectId',
+  path: '/designs/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminChecklistProjectIdRoute = AdminChecklistProjectIdRouteImport.update({
   id: '/admin/checklist/$projectId',
   path: '/admin/checklist/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDesignsProjectIdRoute = AdminDesignsProjectIdRouteImport.update({
+  id: '/admin/designs/$projectId',
+  path: '/admin/designs/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -188,25 +188,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -216,11 +202,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -230,18 +230,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/designs/$projectId': {
-      id: '/designs/$projectId'
-      path: '/designs/$projectId'
-      fullPath: '/designs/$projectId'
-      preLoaderRoute: typeof DesignsProjectIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/customers': {
-      id: '/admin/customers'
-      path: '/admin/customers'
-      fullPath: '/admin/customers'
-      preLoaderRoute: typeof AdminCustomersRouteImport
+    '/admin/$projectId': {
+      id: '/admin/$projectId'
+      path: '/admin/$projectId'
+      fullPath: '/admin/$projectId'
+      preLoaderRoute: typeof AdminProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/catalog': {
@@ -251,18 +244,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/$projectId': {
-      id: '/admin/$projectId'
-      path: '/admin/$projectId'
-      fullPath: '/admin/$projectId'
-      preLoaderRoute: typeof AdminProjectIdRouteImport
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/admin/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/designs/$projectId': {
-      id: '/admin/designs/$projectId'
-      path: '/admin/designs/$projectId'
-      fullPath: '/admin/designs/$projectId'
-      preLoaderRoute: typeof AdminDesignsProjectIdRouteImport
+    '/designs/$projectId': {
+      id: '/designs/$projectId'
+      path: '/designs/$projectId'
+      fullPath: '/designs/$projectId'
+      preLoaderRoute: typeof DesignsProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/checklist/$projectId': {
@@ -270,6 +263,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/checklist/$projectId'
       fullPath: '/admin/checklist/$projectId'
       preLoaderRoute: typeof AdminChecklistProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/designs/$projectId': {
+      id: '/admin/designs/$projectId'
+      path: '/admin/designs/$projectId'
+      fullPath: '/admin/designs/$projectId'
+      preLoaderRoute: typeof AdminDesignsProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -292,13 +292,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
