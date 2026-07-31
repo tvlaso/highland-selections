@@ -18,6 +18,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminProjectIdRouteImport } from './routes/admin.$projectId'
 import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as AdminTemplatesRouteImport } from './routes/admin.templates'
 import { Route as DesignsProjectIdRouteImport } from './routes/designs.$projectId'
 import { Route as AdminChecklistProjectIdRouteImport } from './routes/admin.checklist.$projectId'
 import { Route as AdminDesignsProjectIdRouteImport } from './routes/admin.designs.$projectId'
@@ -67,6 +68,11 @@ const AdminCustomersRoute = AdminCustomersRouteImport.update({
   path: '/admin/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTemplatesRoute = AdminTemplatesRouteImport.update({
+  id: '/admin/templates',
+  path: '/admin/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DesignsProjectIdRoute = DesignsProjectIdRouteImport.update({
   id: '/designs/$projectId',
   path: '/designs/$projectId',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/templates': typeof AdminTemplatesRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/templates': typeof AdminTemplatesRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/templates': typeof AdminTemplatesRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/admin/$projectId'
     | '/admin/catalog'
     | '/admin/customers'
+    | '/admin/templates'
     | '/designs/$projectId'
     | '/admin/'
     | '/admin/checklist/$projectId'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/admin/$projectId'
     | '/admin/catalog'
     | '/admin/customers'
+    | '/admin/templates'
     | '/designs/$projectId'
     | '/admin'
     | '/admin/checklist/$projectId'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/admin/$projectId'
     | '/admin/catalog'
     | '/admin/customers'
+    | '/admin/templates'
     | '/designs/$projectId'
     | '/admin/'
     | '/admin/checklist/$projectId'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   AdminProjectIdRoute: typeof AdminProjectIdRoute
   AdminCatalogRoute: typeof AdminCatalogRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminTemplatesRoute: typeof AdminTemplatesRoute
   DesignsProjectIdRoute: typeof DesignsProjectIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminChecklistProjectIdRoute: typeof AdminChecklistProjectIdRoute
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/templates': {
+      id: '/admin/templates'
+      path: '/admin/templates'
+      fullPath: '/admin/templates'
+      preLoaderRoute: typeof AdminTemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/designs/$projectId': {
       id: '/designs/$projectId'
       path: '/designs/$projectId'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminProjectIdRoute: AdminProjectIdRoute,
   AdminCatalogRoute: AdminCatalogRoute,
   AdminCustomersRoute: AdminCustomersRoute,
+  AdminTemplatesRoute: AdminTemplatesRoute,
   DesignsProjectIdRoute: DesignsProjectIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminChecklistProjectIdRoute: AdminChecklistProjectIdRoute,
