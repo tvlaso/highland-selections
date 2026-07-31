@@ -92,6 +92,7 @@ function ProjectDetail() {
   const syncVersion = useServerFn(syncSelectionsVersion);
   const listCustomersFn = useServerFn(listCustomers);
   const [exporting, setExporting] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(false);
   const [tlFilter, setTlFilter] = useState<"all" | "selections">("all");
   const [custOpen, setCustOpen] = useState(false);
 
