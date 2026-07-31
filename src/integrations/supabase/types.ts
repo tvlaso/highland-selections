@@ -626,6 +626,78 @@ export type Database = {
           },
         ]
       }
+      selection_template_items: {
+        Row: {
+          catalog_item_id: string
+          category: string
+          created_at: string
+          id: string
+          notes: string | null
+          sort_order: number
+          template_id: string
+        }
+        Insert: {
+          catalog_item_id: string
+          category: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          sort_order?: number
+          template_id: string
+        }
+        Update: {
+          catalog_item_id?: string
+          category?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          sort_order?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_template_items_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "master_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "selection_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      selection_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
