@@ -22,10 +22,14 @@ export type ExportOption = {
 
 export type ExportArgs = {
   projectName: string;
-  customerName: string;
-  address: string | null;
-  version: number;
-  lastModified: string | null;
+  customerName?: string;
+  address?: string | null;
+  version?: number;
+  lastModified?: string | null;
+  /** When true, omits customer/project owner details (used for templates). */
+  hideCustomerInfo?: boolean;
+  /** Heading shown under the logo. Defaults to "Selections List". */
+  title?: string;
   options: ExportOption[];
 };
 
@@ -126,7 +130,16 @@ async function buildSelectionsPdf(
   args: ExportArgs,
   imgOpts: { maxDim: number; quality: number; includePhotos: boolean },
 ) {
-  const { projectName, customerName, address, version, lastModified, options } = args;
+  const {
+    projectName,
+    customerName,
+    address,
+    lastModified,
+    options,
+    hideCustomerInfo = false,
+    title = "Selections List",
+  } = args;
+  const version = args.version;
 
   const doc = new jsPDF({ unit: "pt", format: "letter", compress: true });
   const pageW = doc.internal.pageSize.getWidth();
@@ -147,7 +160,13 @@ async function buildSelectionsPdf(
     doc.setTextColor(...gray);
     doc.text(
       [
-        `Highland Remodeling   •   Project: ${projectName}   •   Selections Version: V${version}`,
+        [
+          "Highland Remodeling",
+          `${hideCustomerInfo ? "Template" : "Project"}: ${projectName}`,
+          version != null ? `Selections Version: V${version}` : null,
+        ]
+          .filter(Boolean)
+          .join("   •   "),
         `Generated: ${generatedAt}`,
         "This document reflects the approved selections at the time it was generated.",
       ],
@@ -173,20 +192,22 @@ async function buildSelectionsPdf(
 
   doc.setFontSize(18);
   doc.setTextColor(...navy);
-  doc.text("Selections List", margin, y + 6);
+  doc.text(title, margin, y + 6);
   y += 22;
 
   // Meta block
   doc.setFontSize(10);
   doc.setTextColor(60, 60, 60);
-  const meta = [
-    `Project: ${projectName}`,
-    `Customer: ${customerName}`,
-    `Address: ${address || "—"}`,
-    `Export Version: V${version}`,
-    `Last Modified: ${fmt(lastModified)}`,
-    `Generated: ${generatedAt}`,
-  ];
+  const meta = hideCustomerInfo
+    ? [`Template: ${projectName}`, `Generated: ${generatedAt}`]
+    : [
+        `Project: ${projectName}`,
+        `Customer: ${customerName || "—"}`,
+        `Address: ${address || "—"}`,
+        `Export Version: V${version ?? 1}`,
+        `Last Modified: ${fmt(lastModified ?? null)}`,
+        `Generated: ${generatedAt}`,
+      ];
   meta.forEach((line) => {
     y += 14;
     doc.text(line, margin, y);
@@ -324,7 +345,9 @@ export async function generateSelectionsPdf(args: ExportArgs) {
   }
 
   const safe = args.projectName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-  const name = `selections-${safe}-v${args.version}.pdf`;
+  const name = args.hideCustomerInfo
+    ? `selections-template-${safe}.pdf`
+    : `selections-${safe}-v${args.version ?? 1}.pdf`;
 
   if (blob) {
     const url = URL.createObjectURL(blob);
