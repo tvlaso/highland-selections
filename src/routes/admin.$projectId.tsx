@@ -22,6 +22,7 @@ import {
   Pencil,
   ClipboardList,
 } from "lucide-react";
+import { LayoutTemplate } from "lucide-react";
 import { Images } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -420,6 +421,9 @@ function ProjectDetail() {
                   <Button variant="outline" size="sm" disabled={exporting || options.length === 0} onClick={handleExport}>
                     <FileDown className="h-4 w-4" /> {exporting ? "Exporting…" : "Export Selections List"}
                   </Button>
+                  <Button variant="outline" size="sm" onClick={() => setApplyOpen(true)}>
+                    <LayoutTemplate className="h-4 w-4" /> Apply Template
+                  </Button>
                   <Button variant="hero" size="sm" onClick={() => setAddOpen(true)}>
                     <Plus className="h-4 w-4" /> Add from Catalog
                   </Button>
@@ -592,6 +596,14 @@ function ProjectDetail() {
               open={addOpen}
               onOpenChange={setAddOpen}
               existingCatalogIds={options.map((o) => o.catalog_item_id)}
+            />
+
+            <ApplyTemplateDialog
+              projectId={projectId}
+              open={applyOpen}
+              onOpenChange={setApplyOpen}
+              existingCatalogIds={options.map((o) => o.catalog_item_id)}
+              nextSortOrder={options.length + 1}
             />
           </>
         )}
