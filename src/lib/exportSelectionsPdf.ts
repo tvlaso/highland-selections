@@ -291,10 +291,7 @@ async function buildSelectionsPdf(
       const notesLines = o.customer_notes ? doc.splitTextToSize(`Customer notes: ${o.customer_notes}`, tw) : [];
       const thread = o.notes ?? [];
       const threadLines: string[] = thread.flatMap((n) =>
-        doc.splitTextToSize(
-          `• ${n.author_name}: ${n.body}`,
-          tw - 6,
-        ) as string[],
+        doc.splitTextToSize(`• ${n.body}`, tw - 6) as string[],
       );
 
       const textBlockHeight =
