@@ -366,6 +366,7 @@ function ProjectDetail() {
         projectName: data.project.name,
         customerName,
         address: data.project.address,
+        projectId,
         version,
         lastModified,
         rooms: rooms.map((r) => r.name),

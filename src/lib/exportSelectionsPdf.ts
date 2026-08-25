@@ -12,6 +12,12 @@ export type ExportCatalogItem = {
   description?: string | null;
 };
 
+export type ExportNote = {
+  author_name: string;
+  body: string;
+  created_at: string;
+};
+
 export type ExportOption = {
   id: string;
   category: string;
@@ -20,6 +26,8 @@ export type ExportOption = {
   status?: string | null;
   /** Room label this selection belongs to. Empty/undefined = unassigned. */
   room?: string | null;
+  /** Threaded notes for this selection. */
+  notes?: ExportNote[];
 };
 
 export const UNASSIGNED_ROOM = "Unassigned";
@@ -36,6 +44,8 @@ export type ExportArgs = {
   title?: string;
   /** Ordered room names for grouping; unlisted rooms are appended. */
   rooms?: string[];
+  /** When set, selection notes are fetched and included in the PDF. */
+  projectId?: string;
   options: ExportOption[];
 };
 
@@ -280,6 +290,13 @@ async function buildSelectionsPdf(
       const titleLines = doc.splitTextToSize(c?.product_name ?? "Unknown product", tw);
       const vendorLines = c?.vendor ? doc.splitTextToSize(`Vendor: ${c.vendor}`, tw) : [];
       const notesLines = o.customer_notes ? doc.splitTextToSize(`Customer notes: ${o.customer_notes}`, tw) : [];
+      const thread = o.notes ?? [];
+      const threadLines: string[] = thread.flatMap((n) =>
+        doc.splitTextToSize(
+          `• ${n.author_name} (${new Date(n.created_at).toLocaleDateString()}): ${n.body}`,
+          tw - 6,
+        ) as string[],
+      );
 
       const textBlockHeight =
         12 + // top padding
@@ -287,6 +304,7 @@ async function buildSelectionsPdf(
         (c?.vendor ? vendorLines.length * 14 + 3 : 0) +
         (c?.product_url ? 14 + 3 : 0) +
         (o.customer_notes ? notesLines.length * 11 + 3 : 0) +
+        (thread.length ? 12 + threadLines.length * 11 + 3 : 0) +
         6;
       const rowH = Math.max(imgSize + 12, textBlockHeight);
 
@@ -346,6 +364,18 @@ async function buildSelectionsPdf(
         ty += notesLines.length * 11 + 3;
       }
 
+      if (thread.length) {
+        doc.setFontSize(8);
+        doc.setTextColor(...gray);
+        doc.text("NOTES", tx, ty + 8);
+        ty += 12;
+        doc.setFontSize(9);
+        doc.setTextColor(70, 70, 70);
+        doc.text(threadLines, tx + 6, ty);
+        ty += threadLines.length * 11 + 3;
+      }
+
+
       y = Math.max(top + imgSize, ty) + 12;
       doc.setDrawColor(235, 235, 235);
       doc.line(margin, y - 6, pageW - margin, y - 6);
@@ -375,6 +405,26 @@ export async function generateSelectionsPdf(args: ExportArgs) {
   ];
 
   await preloadPhotos(args.options.map((o) => o.master_catalog?.image_url ?? "").filter(Boolean));
+
+  if (args.projectId && args.options.some((o) => !o.notes)) {
+    const { data: notes } = await supabase
+      .from("selection_notes")
+      .select("option_id, author_name, body, created_at")
+      .eq("project_id", args.projectId)
+      .order("created_at", { ascending: true });
+    if (notes?.length) {
+      const byOption = new Map<string, ExportNote[]>();
+      for (const n of notes) {
+        const list = byOption.get(n.option_id) ?? [];
+        list.push({ author_name: n.author_name, body: n.body, created_at: n.created_at });
+        byOption.set(n.option_id, list);
+      }
+      args = {
+        ...args,
+        options: args.options.map((o) => (o.notes ? o : { ...o, notes: byOption.get(o.id) ?? [] })),
+      };
+    }
+  }
 
   let blob: Blob | null = null;
   let doc: jsPDF | null = null;
