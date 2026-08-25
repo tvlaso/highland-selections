@@ -12,6 +12,12 @@ export type ExportCatalogItem = {
   description?: string | null;
 };
 
+export type ExportNote = {
+  author_name: string;
+  body: string;
+  created_at: string;
+};
+
 export type ExportOption = {
   id: string;
   category: string;
@@ -20,6 +26,8 @@ export type ExportOption = {
   status?: string | null;
   /** Room label this selection belongs to. Empty/undefined = unassigned. */
   room?: string | null;
+  /** Threaded notes for this selection. */
+  notes?: ExportNote[];
 };
 
 export const UNASSIGNED_ROOM = "Unassigned";
