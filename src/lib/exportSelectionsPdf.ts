@@ -18,7 +18,11 @@ export type ExportOption = {
   customer_notes: string | null;
   master_catalog: ExportCatalogItem | null;
   status?: string | null;
+  /** Room label this selection belongs to. Empty/undefined = unassigned. */
+  room?: string | null;
 };
+
+export const UNASSIGNED_ROOM = "Unassigned";
 
 export type ExportArgs = {
   projectName: string;
@@ -30,6 +34,8 @@ export type ExportArgs = {
   hideCustomerInfo?: boolean;
   /** Heading shown under the logo. Defaults to "Selections List". */
   title?: string;
+  /** Ordered room names for grouping; unlisted rooms are appended. */
+  rooms?: string[];
   options: ExportOption[];
 };
 
@@ -222,9 +228,41 @@ async function buildSelectionsPdf(
     }
   };
 
-  const ordered = CATEGORIES.filter((cat) => options.some((o) => o.category === cat));
+  const roomOrder = [...(args.rooms ?? [])];
+  for (const o of options) {
+    const r = (o.room ?? "").trim();
+    if (r && !roomOrder.includes(r)) roomOrder.push(r);
+  }
+  const hasUnassigned = options.some((o) => !(o.room ?? "").trim());
+  const useRooms = roomOrder.length > 0;
+  const roomGroups: (string | null)[] = useRooms
+    ? [...roomOrder, ...(hasUnassigned ? [UNASSIGNED_ROOM] : [])]
+    : [null];
+  let renderedAny = false;
+
+  for (const room of roomGroups) {
+  const roomItems =
+    room === null
+      ? options
+      : options.filter((o) => {
+          const r = (o.room ?? "").trim();
+          return room === UNASSIGNED_ROOM ? !r : r === room;
+        });
+  if (roomItems.length === 0) continue;
+  if (room !== null) {
+    ensureSpace(48);
+    doc.setFillColor(...navy);
+    doc.rect(margin, y - 2, contentW, 22, "F");
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.text(room.toUpperCase(), margin + 8, y + 13);
+    y += 34;
+  }
+
+  const ordered = CATEGORIES.filter((cat) => roomItems.some((o) => o.category === cat));
   for (const cat of ordered) {
-    const items = options.filter((o) => o.category === cat);
+    const items = roomItems.filter((o) => o.category === cat);
+    renderedAny = true;
     ensureSpace(40);
     doc.setFillColor(...orange);
     doc.rect(margin, y - 2, 4, 16, "F");
@@ -314,8 +352,10 @@ async function buildSelectionsPdf(
     }
     y += 6;
   }
+  y += 6;
+  }
 
-  if (ordered.length === 0) {
+  if (!renderedAny) {
     doc.setFontSize(11);
     doc.setTextColor(...gray);
     doc.text("No selections have been added yet.", margin, y + 10);

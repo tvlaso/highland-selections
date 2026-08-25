@@ -81,8 +81,11 @@ type OptionRow = {
   is_selected: boolean;
   status: string;
   customer_notes: string | null;
+  room_id: string | null;
   master_catalog: CatalogItem | null;
 };
+
+type RoomRow = { id: string; name: string; sort_order: number };
 
 function ProjectDetail() {
   const { projectId } = Route.useParams();
@@ -112,7 +115,7 @@ function ProjectDetail() {
     queryKey: ["admin-project", projectId],
     enabled: role === "admin",
     queryFn: async () => {
-      const [{ data: project }, { data: options }, { data: updates }] = await Promise.all([
+      const [{ data: project }, { data: options }, { data: updates }, { data: rooms }] = await Promise.all([
         supabase.from("projects").select("*").eq("id", projectId).maybeSingle(),
         supabase
           .from("project_selection_options")
@@ -120,11 +123,18 @@ function ProjectDetail() {
           .eq("project_id", projectId)
           .order("sort_order"),
         supabase.from("project_updates").select("*").eq("project_id", projectId).order("created_at", { ascending: false }),
+        supabase
+          .from("project_rooms")
+          .select("id, name, sort_order")
+          .eq("project_id", projectId)
+          .order("sort_order")
+          .order("created_at"),
       ]);
       return {
         project,
         options: (options ?? []) as unknown as OptionRow[],
         updates: updates ?? [],
+        rooms: (rooms ?? []) as RoomRow[],
       };
     },
   });
@@ -146,6 +156,56 @@ function ProjectDetail() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+  });
+
+  const roomMut = useMutation({
+    mutationFn: async ({ id, roomId }: { id: string; roomId: string | null }) => {
+      const { error } = await supabase
+        .from("project_selection_options")
+        .update({ room_id: roomId })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not move selection"),
+  });
+
+  const addRoomMut = useMutation({
+    mutationFn: async (name: string) => {
+      const { error } = await supabase.from("project_rooms").insert({
+        project_id: projectId,
+        name,
+        sort_order: (data?.rooms?.length ?? 0),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      setNewRoom("");
+      toast.success("Room added");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not add room"),
+  });
+
+  const renameRoomMut = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase.from("project_rooms").update({ name }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not rename room"),
+  });
+
+  const deleteRoomMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("project_rooms").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      toast.success("Room deleted. Its selections are now unassigned.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not delete room"),
   });
 
   const statusMut = useMutation({
@@ -205,8 +265,22 @@ function ProjectDetail() {
   });
 
   const [addOpen, setAddOpen] = useState(false);
+  const [newRoom, setNewRoom] = useState("");
 
   const options = data?.options ?? [];
+  const rooms = useMemo(() => data?.rooms ?? [], [data?.rooms]);
+  const roomName = (id: string | null) => rooms.find((r) => r.id === id)?.name ?? null;
+  const roomGroups = useMemo(() => {
+    const groups: { key: string; label: string; id: string | null }[] = rooms.map((r) => ({
+      key: r.id,
+      label: r.name,
+      id: r.id,
+    }));
+    if (rooms.length === 0 || options.some((o) => !o.room_id || !rooms.some((r) => r.id === o.room_id))) {
+      groups.push({ key: "__unassigned", label: rooms.length ? "Unassigned" : "All Selections", id: null });
+    }
+    return groups;
+  }, [rooms, options]);
 
   const assignedProfile =
     (customers.data ?? []).find((c) => c.id === data?.project?.customer_id) ?? null;
@@ -276,11 +350,13 @@ function ProjectDetail() {
         address: data.project.address,
         version,
         lastModified,
+        rooms: rooms.map((r) => r.name),
         options: options.map((o) => ({
           id: o.id,
           category: o.category,
           customer_notes: o.customer_notes,
           master_catalog: o.master_catalog,
+          room: roomName(o.room_id),
         })),
       });
       qc.invalidateQueries({ queryKey: ["admin-timeline", projectId] });
@@ -292,8 +368,7 @@ function ProjectDetail() {
   };
 
 
-  const move = (cat: string, index: number, dir: -1 | 1) => {
-    const items = options.filter((o) => o.category === cat);
+  const move = (items: OptionRow[], index: number, dir: -1 | 1) => {
     const target = index + dir;
     if (target < 0 || target >= items.length) return;
     const a = items[index];
@@ -431,12 +506,80 @@ function ProjectDetail() {
                 </div>
               </div>
 
-              <div className="mt-4 space-y-6">
-                {CATEGORIES.filter((cat) => options.some((o) => o.category === cat)).map((cat) => {
-                  const items = options.filter((o) => o.category === cat);
+              {/* Rooms manager */}
+              <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+                <h3 className="mb-2 text-sm font-semibold">Rooms</h3>
+                <div className="flex flex-wrap gap-2">
+                  {rooms.map((r) => (
+                    <div key={r.id} className="flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1">
+                      <Input
+                        defaultValue={r.name}
+                        className="h-7 w-36 border-none px-1 text-sm shadow-none focus-visible:ring-0"
+                        onBlur={(e) => {
+                          const name = e.target.value.trim();
+                          if (name && name !== r.name) renameRoomMut.mutate({ id: r.id, name });
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => deleteRoomMut.mutate(r.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                  {rooms.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      No rooms yet. Add rooms to organize selections by room.
+                    </p>
+                  )}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Input
+                    value={newRoom}
+                    onChange={(e) => setNewRoom(e.target.value)}
+                    placeholder="Room name (e.g. Master Bath)"
+                    className="h-9 max-w-xs"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newRoom.trim()) addRoomMut.mutate(newRoom.trim());
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!newRoom.trim() || addRoomMut.isPending}
+                    onClick={() => addRoomMut.mutate(newRoom.trim())}
+                  >
+                    <Plus className="h-4 w-4" /> Add Room
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-8">
+                {roomGroups.map((group) => {
+                const groupOptions = group.id
+                  ? options.filter((o) => o.room_id === group.id)
+                  : options.filter((o) => !o.room_id || !rooms.some((r) => r.id === o.room_id));
+                if (groupOptions.length === 0 && rooms.length > 0 && group.id === null) return null;
+                return (
+                <div key={group.key} className="space-y-6">
+                  {rooms.length > 0 && (
+                    <h3 className="rounded-lg bg-[image:var(--gradient-navy)] px-3 py-2 text-sm font-bold uppercase tracking-wide text-[oklch(0.99_0.005_250)]">
+                      {group.label}
+                    </h3>
+                  )}
+                  {groupOptions.length === 0 && (
+                    <p className="rounded-lg border border-dashed border-border px-3 py-3 text-center text-sm text-muted-foreground">
+                      No selections in this room yet.
+                    </p>
+                  )}
+                {CATEGORIES.filter((cat) => groupOptions.some((o) => o.category === cat)).map((cat) => {
+                  const items = groupOptions.filter((o) => o.category === cat);
                   return (
                     <div key={cat}>
-                      <h3 className="mb-2 border-l-4 border-accent pl-3 text-sm font-bold uppercase tracking-wide">{cat}</h3>
+                      <h4 className="mb-2 border-l-4 border-accent pl-3 text-sm font-bold uppercase tracking-wide">{cat}</h4>
                       <div className="space-y-2">
                         {items.map((o, idx) => {
                           const c = o.master_catalog;
@@ -483,10 +626,26 @@ function ProjectDetail() {
                                       {CATEGORIES.map((cc) => <SelectItem key={cc} value={cc}>{cc}</SelectItem>)}
                                     </SelectContent>
                                   </Select>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === 0} onClick={() => move(cat, idx, -1)}>
+                                  {rooms.length > 0 && (
+                                    <Select
+                                      value={o.room_id ?? "__none"}
+                                      onValueChange={(v) =>
+                                        roomMut.mutate({ id: o.id, roomId: v === "__none" ? null : v })
+                                      }
+                                    >
+                                      <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Room" /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="__none">Unassigned</SelectItem>
+                                        {rooms.map((r) => (
+                                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  )}
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === 0} onClick={() => move(items, idx, -1)}>
                                     <ArrowUp className="h-4 w-4" />
                                   </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === items.length - 1} onClick={() => move(cat, idx, 1)}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === items.length - 1} onClick={() => move(items, idx, 1)}>
                                     <ArrowDown className="h-4 w-4" />
                                   </Button>
                                   <Button variant="ghost" size="sm" onClick={() => removeMut.mutate(o.id)}>
@@ -504,6 +663,9 @@ function ProjectDetail() {
                       </div>
                     </div>
                   );
+                })}
+                </div>
+                );
                 })}
                 {options.length === 0 && (
                   <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">

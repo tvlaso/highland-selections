@@ -44,8 +44,11 @@ type OptionRow = {
   status: string;
   customer_notes: string | null;
   catalog_item_id: string;
+  room_id: string | null;
   master_catalog: CatalogItem | null;
 };
+
+type RoomRow = { id: string; name: string };
 
 function Dashboard() {
   const { session, role, loading } = useAuth();
@@ -96,7 +99,7 @@ function Dashboard() {
     queryKey: ["customer-project-detail", selectedId],
     enabled: !!selectedId,
     queryFn: async () => {
-      const [{ data: options }, { data: updates }] = await Promise.all([
+      const [{ data: options }, { data: updates }, { data: rooms }] = await Promise.all([
         supabase
           .from("project_selection_options")
           .select("*, master_catalog(*)")
@@ -107,15 +110,23 @@ function Dashboard() {
           .select("*")
           .eq("project_id", selectedId!)
           .order("created_at", { ascending: false }),
+        supabase
+          .from("project_rooms")
+          .select("id, name")
+          .eq("project_id", selectedId!)
+          .order("sort_order")
+          .order("created_at"),
       ]);
       return {
         options: (options ?? []) as unknown as OptionRow[],
         updates: updates ?? [],
+        rooms: (rooms ?? []) as RoomRow[],
       };
     },
   });
 
   const options = data?.options ?? [];
+  const rooms = useMemo(() => data?.rooms ?? [], [data?.rooms]);
 
   const handleExport = async () => {
     if (!project) return;
@@ -133,11 +144,13 @@ function Dashboard() {
         address: project.address,
         version,
         lastModified,
+        rooms: rooms.map((r) => r.name),
         options: options.map((o) => ({
           id: o.id,
           category: o.category,
           customer_notes: o.customer_notes,
           master_catalog: o.master_catalog,
+          room: rooms.find((r) => r.id === o.room_id)?.name ?? null,
         })),
       });
     } catch (e) {
@@ -177,10 +190,23 @@ function Dashboard() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not submit"),
   });
 
-  const categoriesWithOptions = useMemo(
-    () => CATEGORIES.filter((cat) => options.some((o) => o.category === cat)),
-    [options],
-  );
+  const roomSections = useMemo(() => {
+    const sections: { key: string; label: string | null; items: OptionRow[] }[] = [];
+    if (rooms.length === 0) {
+      sections.push({ key: "all", label: null, items: options });
+    } else {
+      for (const r of rooms) {
+        const items = options.filter((o) => o.room_id === r.id);
+        if (items.length) sections.push({ key: r.id, label: r.name, items });
+      }
+      const rest = options.filter((o) => !o.room_id || !rooms.some((r) => r.id === o.room_id));
+      if (rest.length) sections.push({ key: "__unassigned", label: "Unassigned", items: rest });
+    }
+    return sections.map((s) => ({
+      ...s,
+      categories: CATEGORIES.filter((cat) => s.items.some((o) => o.category === cat)),
+    }));
+  }, [options, rooms]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -247,7 +273,7 @@ function Dashboard() {
                         isLoading={isLoading}
                         updates={data?.updates ?? []}
                         options={options}
-                        categoriesWithOptions={categoriesWithOptions}
+                        roomSections={roomSections}
                         exporting={exporting}
                         onExport={handleExport}
                         approveMut={approveMut}
@@ -272,7 +298,7 @@ function ProjectView({
   isLoading,
   updates,
   options,
-  categoriesWithOptions,
+  roomSections,
   exporting,
   onExport,
   approveMut,
@@ -296,7 +322,7 @@ function ProjectView({
   isLoading: boolean;
   updates: { id: string; title: string; body: string | null; created_at: string }[];
   options: OptionRow[];
-  categoriesWithOptions: readonly string[];
+  roomSections: { key: string; label: string | null; items: OptionRow[]; categories: readonly string[] }[];
   exporting: boolean;
   onExport: () => void;
   approveMut: ReturnType<typeof useMutation<void, Error, string>>;
@@ -401,13 +427,20 @@ function ProjectView({
           </p>
         ) : (
           <div className="space-y-8">
-            {categoriesWithOptions.map((cat) => (
+            {roomSections.map((section) => (
+              <div key={section.key} className="space-y-6">
+                {section.label && (
+                  <h3 className="rounded-lg bg-[image:var(--gradient-navy)] px-3 py-2 text-base font-bold uppercase tracking-wide text-[oklch(0.99_0.005_250)]">
+                    {section.label}
+                  </h3>
+                )}
+                {section.categories.map((cat) => (
               <div key={cat}>
-                <h3 className="mb-3 border-l-4 border-accent pl-3 text-base font-bold uppercase tracking-wide text-foreground">
+                <h4 className="mb-3 border-l-4 border-accent pl-3 text-base font-bold uppercase tracking-wide text-foreground">
                   {cat}
-                </h3>
+                </h4>
                 <div className="grid gap-3 md:grid-cols-2">
-                  {options
+                  {section.items
                     .filter((o) => o.category === cat)
                     .map((o) => {
                       const c = o.master_catalog;
@@ -489,6 +522,8 @@ function ProjectView({
                       );
                     })}
                 </div>
+              </div>
+                ))}
               </div>
             ))}
           </div>

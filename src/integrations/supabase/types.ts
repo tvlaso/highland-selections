@@ -379,6 +379,41 @@ export type Database = {
         }
         Relationships: []
       }
+      project_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          project_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          project_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          project_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_rooms_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_selection_options: {
         Row: {
           catalog_item_id: string
@@ -388,6 +423,7 @@ export type Database = {
           id: string
           is_selected: boolean
           project_id: string
+          room_id: string | null
           sort_order: number
           status: string
           updated_at: string
@@ -400,6 +436,7 @@ export type Database = {
           id?: string
           is_selected?: boolean
           project_id: string
+          room_id?: string | null
           sort_order?: number
           status?: string
           updated_at?: string
@@ -412,6 +449,7 @@ export type Database = {
           id?: string
           is_selected?: boolean
           project_id?: string
+          room_id?: string | null
           sort_order?: number
           status?: string
           updated_at?: string
@@ -429,6 +467,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_selection_options_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "project_rooms"
             referencedColumns: ["id"]
           },
         ]
