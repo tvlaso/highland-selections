@@ -170,6 +170,24 @@ function ProjectDetail() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not move selection"),
   });
 
+  const copyToRoomMut = useMutation({
+    mutationFn: async ({ option, roomId }: { option: OptionRow; roomId: string | null }) => {
+      const { error } = await supabase.from("project_selection_options").insert({
+        project_id: projectId,
+        catalog_item_id: option.catalog_item_id,
+        category: option.category,
+        room_id: roomId,
+        sort_order: (data?.options?.length ?? 0) + 1,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      toast.success("Copied to room");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not copy selection"),
+  });
+
   const addRoomMut = useMutation({
     mutationFn: async (name: string) => {
       const { error } = await supabase.from("project_rooms").insert({
