@@ -34,6 +34,8 @@ export type ExportArgs = {
   hideCustomerInfo?: boolean;
   /** Heading shown under the logo. Defaults to "Selections List". */
   title?: string;
+  /** Ordered room names for grouping; unlisted rooms are appended. */
+  rooms?: string[];
   options: ExportOption[];
 };
 
