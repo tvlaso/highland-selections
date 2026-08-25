@@ -481,7 +481,6 @@ function ProjectView({
                               {c?.description && (
                                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
                               )}
-                              )}
                             </div>
                           </div>
                           <div className="space-y-3 border-t border-border p-3">
