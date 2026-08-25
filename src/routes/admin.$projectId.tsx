@@ -506,12 +506,80 @@ function ProjectDetail() {
                 </div>
               </div>
 
-              <div className="mt-4 space-y-6">
-                {CATEGORIES.filter((cat) => options.some((o) => o.category === cat)).map((cat) => {
-                  const items = options.filter((o) => o.category === cat);
+              {/* Rooms manager */}
+              <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+                <h3 className="mb-2 text-sm font-semibold">Rooms</h3>
+                <div className="flex flex-wrap gap-2">
+                  {rooms.map((r) => (
+                    <div key={r.id} className="flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1">
+                      <Input
+                        defaultValue={r.name}
+                        className="h-7 w-36 border-none px-1 text-sm shadow-none focus-visible:ring-0"
+                        onBlur={(e) => {
+                          const name = e.target.value.trim();
+                          if (name && name !== r.name) renameRoomMut.mutate({ id: r.id, name });
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => deleteRoomMut.mutate(r.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                  {rooms.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      No rooms yet. Add rooms to organize selections by room.
+                    </p>
+                  )}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Input
+                    value={newRoom}
+                    onChange={(e) => setNewRoom(e.target.value)}
+                    placeholder="Room name (e.g. Master Bath)"
+                    className="h-9 max-w-xs"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newRoom.trim()) addRoomMut.mutate(newRoom.trim());
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!newRoom.trim() || addRoomMut.isPending}
+                    onClick={() => addRoomMut.mutate(newRoom.trim())}
+                  >
+                    <Plus className="h-4 w-4" /> Add Room
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-8">
+                {roomGroups.map((group) => {
+                const groupOptions = group.id
+                  ? options.filter((o) => o.room_id === group.id)
+                  : options.filter((o) => !o.room_id || !rooms.some((r) => r.id === o.room_id));
+                if (groupOptions.length === 0 && rooms.length > 0 && group.id === null) return null;
+                return (
+                <div key={group.key} className="space-y-6">
+                  {rooms.length > 0 && (
+                    <h3 className="rounded-lg bg-[image:var(--gradient-navy)] px-3 py-2 text-sm font-bold uppercase tracking-wide text-[oklch(0.99_0.005_250)]">
+                      {group.label}
+                    </h3>
+                  )}
+                  {groupOptions.length === 0 && (
+                    <p className="rounded-lg border border-dashed border-border px-3 py-3 text-center text-sm text-muted-foreground">
+                      No selections in this room yet.
+                    </p>
+                  )}
+                {CATEGORIES.filter((cat) => groupOptions.some((o) => o.category === cat)).map((cat) => {
+                  const items = groupOptions.filter((o) => o.category === cat);
                   return (
                     <div key={cat}>
-                      <h3 className="mb-2 border-l-4 border-accent pl-3 text-sm font-bold uppercase tracking-wide">{cat}</h3>
+                      <h4 className="mb-2 border-l-4 border-accent pl-3 text-sm font-bold uppercase tracking-wide">{cat}</h4>
                       <div className="space-y-2">
                         {items.map((o, idx) => {
                           const c = o.master_catalog;
@@ -558,10 +626,26 @@ function ProjectDetail() {
                                       {CATEGORIES.map((cc) => <SelectItem key={cc} value={cc}>{cc}</SelectItem>)}
                                     </SelectContent>
                                   </Select>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === 0} onClick={() => move(cat, idx, -1)}>
+                                  {rooms.length > 0 && (
+                                    <Select
+                                      value={o.room_id ?? "__none"}
+                                      onValueChange={(v) =>
+                                        roomMut.mutate({ id: o.id, roomId: v === "__none" ? null : v })
+                                      }
+                                    >
+                                      <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Room" /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="__none">Unassigned</SelectItem>
+                                        {rooms.map((r) => (
+                                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  )}
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === 0} onClick={() => move(items, idx, -1)}>
                                     <ArrowUp className="h-4 w-4" />
                                   </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === items.length - 1} onClick={() => move(cat, idx, 1)}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === items.length - 1} onClick={() => move(items, idx, 1)}>
                                     <ArrowDown className="h-4 w-4" />
                                   </Button>
                                   <Button variant="ghost" size="sm" onClick={() => removeMut.mutate(o.id)}>
@@ -579,6 +663,9 @@ function ProjectDetail() {
                       </div>
                     </div>
                   );
+                })}
+                </div>
+                );
                 })}
                 {options.length === 0 && (
                   <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">
