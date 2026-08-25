@@ -642,6 +642,27 @@ function ProjectDetail() {
                                       </SelectContent>
                                     </Select>
                                   )}
+                                  {rooms.length > 0 && (
+                                    <Select
+                                      value=""
+                                      onValueChange={(v) =>
+                                        copyToRoomMut.mutate({
+                                          option: o,
+                                          roomId: v === "__none" ? null : v,
+                                        })
+                                      }
+                                    >
+                                      <SelectTrigger className="h-8 w-44">
+                                        <SelectValue placeholder="Copy to room…" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="__none">Unassigned</SelectItem>
+                                        {rooms.map((r) => (
+                                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  )}
                                   <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === 0} onClick={() => move(items, idx, -1)}>
                                     <ArrowUp className="h-4 w-4" />
                                   </Button>
