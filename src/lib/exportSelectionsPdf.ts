@@ -302,7 +302,6 @@ async function buildSelectionsPdf(
         12 + // top padding
         titleLines.length * 15 + 3 +
         (c?.vendor ? vendorLines.length * 14 + 3 : 0) +
-        (c?.product_url ? 14 + 3 : 0) +
         (o.customer_notes ? notesLines.length * 11 + 3 : 0) +
         (thread.length ? 12 + threadLines.length * 11 + 3 : 0) +
         6;

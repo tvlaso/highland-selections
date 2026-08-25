@@ -52,7 +52,7 @@ type CatalogItem = {
   price: number | null;
   image_url: string | null;
   images: string[] | null;
-  product_url: string | null;
+  product_link: string | null;
   description: string | null;
 };
 
