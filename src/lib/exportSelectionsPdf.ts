@@ -44,6 +44,8 @@ export type ExportArgs = {
   title?: string;
   /** Ordered room names for grouping; unlisted rooms are appended. */
   rooms?: string[];
+  /** When set, selection notes are fetched and included in the PDF. */
+  projectId?: string;
   options: ExportOption[];
 };
 
