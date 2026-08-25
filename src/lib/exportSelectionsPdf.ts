@@ -406,6 +406,26 @@ export async function generateSelectionsPdf(args: ExportArgs) {
 
   await preloadPhotos(args.options.map((o) => o.master_catalog?.image_url ?? "").filter(Boolean));
 
+  if (args.projectId && args.options.some((o) => !o.notes)) {
+    const { data: notes } = await supabase
+      .from("selection_notes")
+      .select("option_id, author_name, body, created_at")
+      .eq("project_id", args.projectId)
+      .order("created_at", { ascending: true });
+    if (notes?.length) {
+      const byOption = new Map<string, ExportNote[]>();
+      for (const n of notes) {
+        const list = byOption.get(n.option_id) ?? [];
+        list.push({ author_name: n.author_name, body: n.body, created_at: n.created_at });
+        byOption.set(n.option_id, list);
+      }
+      args = {
+        ...args,
+        options: args.options.map((o) => (o.notes ? o : { ...o, notes: byOption.get(o.id) ?? [] })),
+      };
+    }
+  }
+
   let blob: Blob | null = null;
   let doc: jsPDF | null = null;
   for (const opts of attempts) {
