@@ -290,6 +290,13 @@ async function buildSelectionsPdf(
       const titleLines = doc.splitTextToSize(c?.product_name ?? "Unknown product", tw);
       const vendorLines = c?.vendor ? doc.splitTextToSize(`Vendor: ${c.vendor}`, tw) : [];
       const notesLines = o.customer_notes ? doc.splitTextToSize(`Customer notes: ${o.customer_notes}`, tw) : [];
+      const thread = o.notes ?? [];
+      const threadLines: string[] = thread.flatMap((n) =>
+        doc.splitTextToSize(
+          `• ${n.author_name} (${new Date(n.created_at).toLocaleDateString()}): ${n.body}`,
+          tw - 6,
+        ) as string[],
+      );
 
       const textBlockHeight =
         12 + // top padding
@@ -297,6 +304,7 @@ async function buildSelectionsPdf(
         (c?.vendor ? vendorLines.length * 14 + 3 : 0) +
         (c?.product_url ? 14 + 3 : 0) +
         (o.customer_notes ? notesLines.length * 11 + 3 : 0) +
+        (thread.length ? 12 + threadLines.length * 11 + 3 : 0) +
         6;
       const rowH = Math.max(imgSize + 12, textBlockHeight);
 
