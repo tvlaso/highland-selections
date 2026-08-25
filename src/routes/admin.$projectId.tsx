@@ -758,14 +758,16 @@ function ProjectDetail() {
               projectId={projectId}
               open={addOpen}
               onOpenChange={setAddOpen}
-              existingCatalogIds={options.map((o) => o.catalog_item_id)}
+              rooms={rooms}
+              existing={options.map((o) => ({ catalog_item_id: o.catalog_item_id, room_id: o.room_id }))}
             />
 
             <ApplyTemplateDialog
               projectId={projectId}
               open={applyOpen}
               onOpenChange={setApplyOpen}
-              existingCatalogIds={options.map((o) => o.catalog_item_id)}
+              rooms={rooms}
+              existing={options.map((o) => ({ catalog_item_id: o.catalog_item_id, room_id: o.room_id }))}
               nextSortOrder={options.length + 1}
             />
           </>
@@ -779,15 +781,18 @@ function AddFromCatalogDialog({
   projectId,
   open,
   onOpenChange,
-  existingCatalogIds,
+  rooms,
+  existing,
 }: {
   projectId: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  existingCatalogIds: string[];
+  rooms: RoomRow[];
+  existing: { catalog_item_id: string; room_id: string | null }[];
 }) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [targetRoom, setTargetRoom] = useState<string>("__none");
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["catalog-active"],
@@ -810,7 +815,8 @@ function AddFromCatalogDialog({
         project_id: projectId,
         catalog_item_id: item.id,
         category: item.category,
-        sort_order: existingCatalogIds.length + 1,
+        room_id: targetRoom === "__none" ? null : targetRoom,
+        sort_order: existing.length + 1,
       });
       if (error) throw error;
     },
@@ -821,10 +827,15 @@ function AddFromCatalogDialog({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
+  const roomKey = targetRoom === "__none" ? null : targetRoom;
+  const inThisRoom = useMemo(
+    () => new Set(existing.filter((e) => (e.room_id ?? null) === roomKey).map((e) => e.catalog_item_id)),
+    [existing, roomKey],
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (items ?? []).filter((i) => {
-      if (existingCatalogIds.includes(i.id)) return false;
       if (!q) return true;
       return (
         i.product_name.toLowerCase().includes(q) ||
@@ -832,7 +843,7 @@ function AddFromCatalogDialog({
         (i.vendor ?? "").toLowerCase().includes(q)
       );
     });
-  }, [items, search, existingCatalogIds]);
+  }, [items, search]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -840,6 +851,20 @@ function AddFromCatalogDialog({
         <DialogHeader>
           <DialogTitle>Add from Master Catalog</DialogTitle>
         </DialogHeader>
+        {rooms.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Add to room</p>
+            <Select value={targetRoom} onValueChange={setTargetRoom}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Room" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none">Unassigned</SelectItem>
+                {rooms.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <Input placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)} />
         <div className="mt-2 space-y-2">
           {isLoading ? (
@@ -855,7 +880,7 @@ function AddFromCatalogDialog({
                   <p className="truncate text-xs text-muted-foreground">{i.category}{i.vendor ? ` · ${i.vendor}` : ""} · {formatCurrency(i.price)}</p>
                 </div>
                 <Button variant="orange" size="sm" disabled={addMut.isPending} onClick={() => addMut.mutate(i)}>
-                  <Plus className="h-4 w-4" /> Add
+                  <Plus className="h-4 w-4" /> {inThisRoom.has(i.id) ? "Add again" : "Add"}
                 </Button>
               </div>
             ))
@@ -1055,16 +1080,19 @@ function ApplyTemplateDialog({
   projectId,
   open,
   onOpenChange,
-  existingCatalogIds,
+  rooms,
+  existing,
   nextSortOrder,
 }: {
   projectId: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  existingCatalogIds: string[];
+  rooms: RoomRow[];
+  existing: { catalog_item_id: string; room_id: string | null }[];
   nextSortOrder: number;
 }) {
   const qc = useQueryClient();
+  const [targetRoom, setTargetRoom] = useState<string>("__none");
 
   const templates = useQuery({
     queryKey: ["selection-templates"],
@@ -1087,12 +1115,17 @@ function ApplyTemplateDialog({
         .eq("template_id", templateId)
         .order("sort_order");
       if (error) throw error;
+      const roomId = targetRoom === "__none" ? null : targetRoom;
+      const already = new Set(
+        existing.filter((e) => (e.room_id ?? null) === roomId).map((e) => e.catalog_item_id),
+      );
       const rows = (items ?? [])
-        .filter((i) => !existingCatalogIds.includes(i.catalog_item_id))
+        .filter((i) => !already.has(i.catalog_item_id))
         .map((i, idx) => ({
           project_id: projectId,
           catalog_item_id: i.catalog_item_id,
           category: i.category,
+          room_id: roomId,
           sort_order: nextSortOrder + idx,
         }));
       if (rows.length === 0) return 0;
@@ -1114,6 +1147,20 @@ function ApplyTemplateDialog({
         <DialogHeader>
           <DialogTitle>Apply Selection Template</DialogTitle>
         </DialogHeader>
+        {rooms.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Apply to room</p>
+            <Select value={targetRoom} onValueChange={setTargetRoom}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Room" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none">Unassigned</SelectItem>
+                {rooms.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="space-y-2">
           {templates.isLoading ? (
             <p className="py-6 text-center text-sm text-muted-foreground">Loading templates…</p>
