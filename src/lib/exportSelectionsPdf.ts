@@ -302,7 +302,7 @@ async function buildSelectionsPdf(
         titleLines.length * 15 + 3 +
         (c?.vendor ? vendorLines.length * 14 + 3 : 0) +
         (o.customer_notes ? notesLines.length * 11 + 3 : 0) +
-        (thread.length ? 12 + threadLines.length * 11 + 3 : 0) +
+        (thread.length ? 4 + 18 + threadLines.length * 11 + 3 : 0) +
         6;
       const rowH = Math.max(imgSize + 12, textBlockHeight);
 
@@ -357,10 +357,11 @@ async function buildSelectionsPdf(
       }
 
       if (thread.length) {
+        ty += 4;
         doc.setFontSize(8);
         doc.setTextColor(...gray);
         doc.text("NOTES", tx, ty + 8);
-        ty += 12;
+        ty += 18;
         doc.setFontSize(9);
         doc.setTextColor(70, 70, 70);
         doc.text(threadLines, tx + 6, ty);
