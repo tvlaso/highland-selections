@@ -273,7 +273,7 @@ function Dashboard() {
                         isLoading={isLoading}
                         updates={data?.updates ?? []}
                         options={options}
-                        categoriesWithOptions={categoriesWithOptions}
+                        roomSections={roomSections}
                         exporting={exporting}
                         onExport={handleExport}
                         approveMut={approveMut}
@@ -298,7 +298,7 @@ function ProjectView({
   isLoading,
   updates,
   options,
-  categoriesWithOptions,
+  roomSections,
   exporting,
   onExport,
   approveMut,
@@ -322,7 +322,7 @@ function ProjectView({
   isLoading: boolean;
   updates: { id: string; title: string; body: string | null; created_at: string }[];
   options: OptionRow[];
-  categoriesWithOptions: readonly string[];
+  roomSections: { key: string; label: string | null; items: OptionRow[]; categories: readonly string[] }[];
   exporting: boolean;
   onExport: () => void;
   approveMut: ReturnType<typeof useMutation<void, Error, string>>;
@@ -427,13 +427,20 @@ function ProjectView({
           </p>
         ) : (
           <div className="space-y-8">
-            {categoriesWithOptions.map((cat) => (
+            {roomSections.map((section) => (
+              <div key={section.key} className="space-y-6">
+                {section.label && (
+                  <h3 className="rounded-lg bg-[image:var(--gradient-navy)] px-3 py-2 text-base font-bold uppercase tracking-wide text-[oklch(0.99_0.005_250)]">
+                    {section.label}
+                  </h3>
+                )}
+                {section.categories.map((cat) => (
               <div key={cat}>
-                <h3 className="mb-3 border-l-4 border-accent pl-3 text-base font-bold uppercase tracking-wide text-foreground">
+                <h4 className="mb-3 border-l-4 border-accent pl-3 text-base font-bold uppercase tracking-wide text-foreground">
                   {cat}
-                </h3>
+                </h4>
                 <div className="grid gap-3 md:grid-cols-2">
-                  {options
+                  {section.items
                     .filter((o) => o.category === cat)
                     .map((o) => {
                       const c = o.master_catalog;
@@ -515,6 +522,8 @@ function ProjectView({
                       );
                     })}
                 </div>
+              </div>
+                ))}
               </div>
             ))}
           </div>
