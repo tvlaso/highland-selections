@@ -18,7 +18,11 @@ export type ExportOption = {
   customer_notes: string | null;
   master_catalog: ExportCatalogItem | null;
   status?: string | null;
+  /** Room label this selection belongs to. Empty/undefined = unassigned. */
+  room?: string | null;
 };
+
+export const UNASSIGNED_ROOM = "Unassigned";
 
 export type ExportArgs = {
   projectName: string;
