@@ -81,8 +81,11 @@ type OptionRow = {
   is_selected: boolean;
   status: string;
   customer_notes: string | null;
+  room_id: string | null;
   master_catalog: CatalogItem | null;
 };
+
+type RoomRow = { id: string; name: string; sort_order: number };
 
 function ProjectDetail() {
   const { projectId } = Route.useParams();
@@ -112,7 +115,7 @@ function ProjectDetail() {
     queryKey: ["admin-project", projectId],
     enabled: role === "admin",
     queryFn: async () => {
-      const [{ data: project }, { data: options }, { data: updates }] = await Promise.all([
+      const [{ data: project }, { data: options }, { data: updates }, { data: rooms }] = await Promise.all([
         supabase.from("projects").select("*").eq("id", projectId).maybeSingle(),
         supabase
           .from("project_selection_options")
@@ -120,11 +123,18 @@ function ProjectDetail() {
           .eq("project_id", projectId)
           .order("sort_order"),
         supabase.from("project_updates").select("*").eq("project_id", projectId).order("created_at", { ascending: false }),
+        supabase
+          .from("project_rooms")
+          .select("id, name, sort_order")
+          .eq("project_id", projectId)
+          .order("sort_order")
+          .order("created_at"),
       ]);
       return {
         project,
         options: (options ?? []) as unknown as OptionRow[],
         updates: updates ?? [],
+        rooms: (rooms ?? []) as RoomRow[],
       };
     },
   });
@@ -146,6 +156,56 @@ function ProjectDetail() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+  });
+
+  const roomMut = useMutation({
+    mutationFn: async ({ id, roomId }: { id: string; roomId: string | null }) => {
+      const { error } = await supabase
+        .from("project_selection_options")
+        .update({ room_id: roomId })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not move selection"),
+  });
+
+  const addRoomMut = useMutation({
+    mutationFn: async (name: string) => {
+      const { error } = await supabase.from("project_rooms").insert({
+        project_id: projectId,
+        name,
+        sort_order: (data?.rooms?.length ?? 0),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      setNewRoom("");
+      toast.success("Room added");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not add room"),
+  });
+
+  const renameRoomMut = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase.from("project_rooms").update({ name }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-project", projectId] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not rename room"),
+  });
+
+  const deleteRoomMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("project_rooms").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-project", projectId] });
+      toast.success("Room deleted. Its selections are now unassigned.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not delete room"),
   });
 
   const statusMut = useMutation({
@@ -205,8 +265,22 @@ function ProjectDetail() {
   });
 
   const [addOpen, setAddOpen] = useState(false);
+  const [newRoom, setNewRoom] = useState("");
 
   const options = data?.options ?? [];
+  const rooms = useMemo(() => data?.rooms ?? [], [data?.rooms]);
+  const roomName = (id: string | null) => rooms.find((r) => r.id === id)?.name ?? null;
+  const roomGroups = useMemo(() => {
+    const groups: { key: string; label: string; id: string | null }[] = rooms.map((r) => ({
+      key: r.id,
+      label: r.name,
+      id: r.id,
+    }));
+    if (rooms.length === 0 || options.some((o) => !o.room_id || !rooms.some((r) => r.id === o.room_id))) {
+      groups.push({ key: "__unassigned", label: rooms.length ? "Unassigned" : "All Selections", id: null });
+    }
+    return groups;
+  }, [rooms, options]);
 
   const assignedProfile =
     (customers.data ?? []).find((c) => c.id === data?.project?.customer_id) ?? null;
@@ -276,11 +350,13 @@ function ProjectDetail() {
         address: data.project.address,
         version,
         lastModified,
+        rooms: rooms.map((r) => r.name),
         options: options.map((o) => ({
           id: o.id,
           category: o.category,
           customer_notes: o.customer_notes,
           master_catalog: o.master_catalog,
+          room: roomName(o.room_id),
         })),
       });
       qc.invalidateQueries({ queryKey: ["admin-timeline", projectId] });
@@ -292,8 +368,7 @@ function ProjectDetail() {
   };
 
 
-  const move = (cat: string, index: number, dir: -1 | 1) => {
-    const items = options.filter((o) => o.category === cat);
+  const move = (items: OptionRow[], index: number, dir: -1 | 1) => {
     const target = index + dir;
     if (target < 0 || target >= items.length) return;
     const a = items[index];
