@@ -364,6 +364,18 @@ async function buildSelectionsPdf(
         ty += notesLines.length * 11 + 3;
       }
 
+      if (thread.length) {
+        doc.setFontSize(8);
+        doc.setTextColor(...gray);
+        doc.text("NOTES", tx, ty + 8);
+        ty += 12;
+        doc.setFontSize(9);
+        doc.setTextColor(70, 70, 70);
+        doc.text(threadLines, tx + 6, ty);
+        ty += threadLines.length * 11 + 3;
+      }
+
+
       y = Math.max(top + imgSize, ty) + 12;
       doc.setDrawColor(235, 235, 235);
       doc.line(margin, y - 6, pageW - margin, y - 6);
