@@ -292,7 +292,7 @@ async function buildSelectionsPdf(
       const thread = o.notes ?? [];
       const threadLines: string[] = thread.flatMap((n) =>
         doc.splitTextToSize(
-          `• ${n.author_name} (${new Date(n.created_at).toLocaleDateString()}): ${n.body}`,
+          `• ${n.author_name}: ${n.body}`,
           tw - 6,
         ) as string[],
       );
