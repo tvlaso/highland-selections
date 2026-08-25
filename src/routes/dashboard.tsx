@@ -142,6 +142,7 @@ function Dashboard() {
           session?.user?.email ??
           "—",
         address: project.address,
+        projectId: project.id,
         version,
         lastModified,
         rooms: rooms.map((r) => r.name),
