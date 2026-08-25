@@ -357,10 +357,11 @@ async function buildSelectionsPdf(
       }
 
       if (thread.length) {
+        ty += 4;
         doc.setFontSize(8);
         doc.setTextColor(...gray);
         doc.text("NOTES", tx, ty + 8);
-        ty += 12;
+        ty += 18;
         doc.setFontSize(9);
         doc.setTextColor(70, 70, 70);
         doc.text(threadLines, tx + 6, ty);
