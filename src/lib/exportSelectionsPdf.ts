@@ -9,6 +9,7 @@ export type ExportCatalogItem = {
   image_url: string | null;
   price?: number | null;
   description?: string | null;
+  product_link?: string | null;
 };
 
 export type ExportNote = {
@@ -288,6 +289,8 @@ async function buildSelectionsPdf(
 
       const titleLines = doc.splitTextToSize(c?.product_name ?? "Unknown product", tw);
       const vendorLines = c?.vendor ? doc.splitTextToSize(`Vendor: ${c.vendor}`, tw) : [];
+      const linkUrl = c?.product_link?.trim() || null;
+      const linkLines = linkUrl ? doc.splitTextToSize("View product link", tw) : [];
       const notesLines = o.customer_notes ? doc.splitTextToSize(`Customer notes: ${o.customer_notes}`, tw) : [];
       const thread = o.notes ?? [];
       const threadLines: string[] = thread.flatMap((n) =>
@@ -298,6 +301,7 @@ async function buildSelectionsPdf(
         12 + // top padding
         titleLines.length * 15 + 3 +
         (c?.vendor ? vendorLines.length * 14 + 3 : 0) +
+        (linkUrl ? linkLines.length * 13 + 3 : 0) +
         (o.customer_notes ? notesLines.length * 11 + 3 : 0) +
         (thread.length ? 4 + 18 + threadLines.length * 11 + 3 : 0) +
         6;
@@ -344,6 +348,14 @@ async function buildSelectionsPdf(
         doc.text(vendorLines, tx, ty);
         ty += vendorLines.length * 14 + 3;
       }
+
+      if (linkUrl) {
+        doc.setFontSize(9);
+        doc.setTextColor(...orange);
+        doc.textWithLink("View product link", tx, ty, { url: linkUrl });
+        ty += linkLines.length * 13 + 3;
+      }
+
 
 
       if (o.customer_notes) {
