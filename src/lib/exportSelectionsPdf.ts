@@ -350,8 +350,10 @@ async function buildSelectionsPdf(
     }
     y += 6;
   }
+  y += 6;
+  }
 
-  if (ordered.length === 0) {
+  if (!renderedAny) {
     doc.setFontSize(11);
     doc.setTextColor(...gray);
     doc.text("No selections have been added yet.", margin, y + 10);
