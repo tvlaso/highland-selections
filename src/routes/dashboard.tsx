@@ -32,7 +32,7 @@ type CatalogItem = {
   price: number | null;
   image_url: string | null;
   images: string[] | null;
-  product_url: string | null;
+  product_link: string | null;
   description: string | null;
 };
 
@@ -480,17 +480,6 @@ function ProjectView({
                               {c?.vendor && <p className="text-sm text-muted-foreground">{c.vendor}</p>}
                               {c?.description && (
                                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description}</p>
-                              )}
-                              {c?.product_url && (
-                                <a
-                                  href={c.product_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
-                                >
-                                  Manufacturer PDF <ExternalLink className="h-3.5 w-3.5" />
-                                </a>
                               )}
                             </div>
                           </div>

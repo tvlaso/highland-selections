@@ -52,7 +52,7 @@ type CatalogItem = {
   price: number | null;
   image_url: string | null;
   images: string[] | null;
-  product_url: string | null;
+  product_link: string | null;
   description: string | null;
 };
 
@@ -347,14 +347,14 @@ function TemplatesPage() {
                                     {c?.vendor && (
                                       <p className="text-sm text-muted-foreground">{c.vendor}</p>
                                     )}
-                                    {c?.product_url && (
+                                    {c?.product_link && (
                                       <a
-                                        href={c.product_url}
+                                        href={c.product_link}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="inline-flex items-center gap-1 text-sm text-accent hover:underline"
                                       >
-                                        Manufacturer PDF <ExternalLink className="h-3 w-3" />
+                                        Product link <ExternalLink className="h-3 w-3" />
                                       </a>
                                     )}
                                     <Textarea

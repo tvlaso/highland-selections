@@ -6,9 +6,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * Synchronizes the customer-visible selections "export version" for a project.
  *
  * The version increments by 1 ONLY when customer-visible exported content
- * changes (category, product name, vendor, photo, manufacturer PDF link,
- * customer notes). Internal-only fields (cost, status, internal notes) are
- * deliberately excluded from the fingerprint, so they never bump the version.
+ * changes (category, product name, vendor, photo, customer notes). Internal-only
+ * fields (cost, status, internal notes) are deliberately excluded from the
+ * fingerprint, so they never bump the version.
  *
  * Always logs a "Selections Export Generated" timeline event, and a
  * "Selections Version Updated" event when the version actually changes.
@@ -32,7 +32,7 @@ export const syncSelectionsVersion = createServerFn({ method: "POST" })
 
     const { data: options, error: oErr } = await supabase
       .from("project_selection_options")
-      .select("category, sort_order, customer_notes, master_catalog(product_name, vendor, image_url, product_url)")
+      .select("category, sort_order, customer_notes, master_catalog(product_name, vendor, image_url)")
       .eq("project_id", projectId)
       .order("category")
       .order("sort_order");
@@ -41,13 +41,12 @@ export const syncSelectionsVersion = createServerFn({ method: "POST" })
     // Canonical string of ONLY customer-visible exported fields.
     const canonical = (options ?? [])
       .map((o) => {
-        const c = (o as { master_catalog: { product_name?: string; vendor?: string | null; image_url?: string | null; product_url?: string | null } | null }).master_catalog;
+        const c = (o as { master_catalog: { product_name?: string; vendor?: string | null; image_url?: string | null } | null }).master_catalog;
         return [
           o.category ?? "",
           c?.product_name ?? "",
           c?.vendor ?? "",
           c?.image_url ?? "",
-          c?.product_url ?? "",
           o.customer_notes ?? "",
         ].join("|");
       })

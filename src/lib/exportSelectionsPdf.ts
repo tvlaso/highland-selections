@@ -7,7 +7,6 @@ export type ExportCatalogItem = {
   product_name: string;
   vendor: string | null;
   image_url: string | null;
-  product_url: string | null;
   price?: number | null;
   description?: string | null;
 };
@@ -302,7 +301,6 @@ async function buildSelectionsPdf(
         12 + // top padding
         titleLines.length * 15 + 3 +
         (c?.vendor ? vendorLines.length * 14 + 3 : 0) +
-        (c?.product_url ? 14 + 3 : 0) +
         (o.customer_notes ? notesLines.length * 11 + 3 : 0) +
         (thread.length ? 12 + threadLines.length * 11 + 3 : 0) +
         6;
@@ -350,12 +348,6 @@ async function buildSelectionsPdf(
         ty += vendorLines.length * 14 + 3;
       }
 
-      if (c?.product_url) {
-        doc.setFontSize(10);
-        doc.setTextColor(...orange);
-        doc.textWithLink("Manufacturer PDF / Product Link", tx, ty, { url: c.product_url });
-        ty += 14 + 3;
-      }
 
       if (o.customer_notes) {
         doc.setFontSize(9);
