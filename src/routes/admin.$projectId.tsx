@@ -633,9 +633,9 @@ function ProjectDetail() {
                                     Customer note: {o.customer_notes}
                                   </p>
                                 )}
-                                {c?.product_url && (
-                                  <a href={c.product_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
-                                    Product <ExternalLink className="h-3 w-3" />
+                                {c?.product_link && (
+                                  <a href={c.product_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
+                                    Product link <ExternalLink className="h-3 w-3" />
                                   </a>
                                 )}
                                 <div className="mt-2 flex flex-wrap items-center gap-2">

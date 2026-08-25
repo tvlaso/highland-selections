@@ -7,7 +7,7 @@ export type ExportCatalogItem = {
   product_name: string;
   vendor: string | null;
   image_url: string | null;
-  product_url: string | null;
+  product_link: string | null;
   price?: number | null;
   description?: string | null;
 };
@@ -350,10 +350,10 @@ async function buildSelectionsPdf(
         ty += vendorLines.length * 14 + 3;
       }
 
-      if (c?.product_url) {
+      if (c?.product_link) {
         doc.setFontSize(10);
         doc.setTextColor(...orange);
-        doc.textWithLink("Manufacturer PDF / Product Link", tx, ty, { url: c.product_url });
+        doc.textWithLink("Product Link", tx, ty, { url: c.product_link });
         ty += 14 + 3;
       }
 

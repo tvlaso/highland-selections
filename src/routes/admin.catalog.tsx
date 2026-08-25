@@ -113,13 +113,8 @@ function CatalogPage() {
                           </p>
                         )}
                         {i.description && <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{i.description}</p>}
-                        {i.product_url && (
-                          <a href={i.product_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
-                            Manufacturer PDF <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
                         {i.product_link && (
-                          <a href={i.product_link} target="_blank" rel="noreferrer" className="ml-2 inline-flex items-center gap-1 text-sm text-accent hover:underline">
+                          <a href={i.product_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
                             Product link <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
