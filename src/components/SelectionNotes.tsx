@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ export function SelectionNotes({
   const { session, role } = useAuth();
   const qc = useQueryClient();
   const [draft, setDraft] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
 
   const notes = useQuery({
     queryKey: ["selection-notes", optionId],
@@ -55,6 +57,37 @@ export function SelectionNotes({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not add note"),
   });
 
+  const editMut = useMutation({
+    mutationFn: async ({ id, body }: { id: string; body: string }) => {
+      const { error } = await supabase.from("selection_notes").update({ body }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setEditingId(null);
+      setEditDraft("");
+      qc.invalidateQueries({ queryKey: ["selection-notes", optionId] });
+      toast.success("Note updated");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not update note"),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("selection_notes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["selection-notes", optionId] });
+      toast.success("Note deleted");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not delete note"),
+  });
+
+  const startEdit = (id: string, body: string) => {
+    setEditingId(id);
+    setEditDraft(body);
+  };
+
   return (
     <div className="space-y-2">
       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -66,14 +99,73 @@ export function SelectionNotes({
         ) : (notes.data ?? []).length === 0 ? (
           <p className="text-xs text-muted-foreground">No notes yet.</p>
         ) : (
-          notes.data!.map((n) => (
-            <div key={n.id} className="rounded-md bg-secondary px-3 py-2">
-              <p className="text-sm text-foreground whitespace-pre-wrap">{n.body}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {n.author_name} · {new Date(n.created_at).toLocaleString()}
-              </p>
-            </div>
-          ))
+          notes.data!.map((n) => {
+            const isMine = !!session?.user?.id && n.author_id === session.user.id;
+            const isEditing = editingId === n.id;
+            return (
+              <div key={n.id} className="rounded-md bg-secondary px-3 py-2">
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      rows={2}
+                      value={editDraft}
+                      onChange={(e) => setEditDraft(e.target.value)}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={editMut.isPending || !editDraft.trim()}
+                        onClick={() => editMut.mutate({ id: n.id, body: editDraft.trim() })}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditDraft("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{n.body}</p>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-muted-foreground">
+                        {n.author_name} · {new Date(n.created_at).toLocaleString()}
+                      </p>
+                      {isMine && !readOnly && (
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            aria-label="Edit note"
+                            className="text-muted-foreground hover:text-foreground"
+                            onClick={() => startEdit(n.id, n.body)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Delete note"
+                            className="text-muted-foreground hover:text-destructive"
+                            disabled={deleteMut.isPending}
+                            onClick={() => deleteMut.mutate(n.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
       {!readOnly && (
