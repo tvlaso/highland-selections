@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/AppHeader";
 import { ImageGallery } from "@/components/ImageGallery";
 import { CatalogDialog, type EditableCatalogItem } from "@/components/CatalogDialog";
+import { ImportFromUrlDialog } from "@/components/ImportFromUrlDialog";
 import { Button } from "@/components/ui/button";
 import { CATEGORIES, formatCurrency } from "@/lib/constants";
 
@@ -42,6 +43,7 @@ function CatalogPage() {
   });
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<EditableCatalogItem | undefined>();
 
   const deleteMut = useMutation({
@@ -69,9 +71,14 @@ function CatalogPage() {
             <h1 className="text-2xl font-bold">Master Catalog</h1>
             <p className="text-sm text-muted-foreground">A reusable product library you can add to any project.</p>
           </div>
-          <Button variant="hero" onClick={() => { setEditing(undefined); setDialogOpen(true); }}>
-            <Plus className="h-4 w-4" /> Add Product
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Link2 className="h-4 w-4" /> Import from URL
+            </Button>
+            <Button variant="hero" onClick={() => { setEditing(undefined); setDialogOpen(true); }}>
+              <Plus className="h-4 w-4" /> Add Product
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -136,6 +143,7 @@ function CatalogPage() {
         )}
 
         <CatalogDialog open={dialogOpen} onOpenChange={setDialogOpen} existing={editing} />
+        <ImportFromUrlDialog open={importOpen} onOpenChange={setImportOpen} />
       </main>
     </div>
   );
