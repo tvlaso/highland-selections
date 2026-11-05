@@ -197,7 +197,7 @@ export const extractProductFromUrl = createServerFn({ method: "POST" })
       instructions:
         "You extract product details from supplier web pages for a remodeling materials catalog. " +
         "Only use information explicitly present in the page content — never guess or invent values; use null when something is not stated. " +
-        "price must be a number in USD without currency symbols. " +
+        "price must be the displayed retail price in US dollars as a decimal number (for example 204.15), never in cents and without currency symbols. " +
         "category must be the single best match from the allowed list. " +
         "vendor is the supplier or retailer selling the product. " +
         "image_url is the absolute URL of the main product photo. " +
@@ -244,7 +244,9 @@ export const extractProductFromUrl = createServerFn({ method: "POST" })
     // Save the product image to storage so we don't rely on temporary URLs.
     let imagePath: string | null = null;
     let warning: string | null = null;
-    const imageSourceUrl = extracted.image_url ?? ogImage;
+    // Fallbacks: AI-found image, page og:image, first image embedded in the page content.
+    const markdownImage = /!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/.exec(markdown)?.[1] ?? null;
+    const imageSourceUrl = extracted.image_url ?? ogImage ?? markdownImage;
     if (imageSourceUrl) {
       const result = await downloadImageToStorage(imageSourceUrl);
       if ("path" in result) imagePath = result.path;
