@@ -45,7 +45,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/admin/customers")({
-  head: () => ({ meta: [{ title: "Customers | Highland Remodeling" }] }),
+  head: () => ({ meta: [
+    { title: "Customers | Highland Remodeling" },
+    { name: "description", content: "Manage Highland Remodeling customer accounts." },
+    { property: "og:title", content: "Customers | Highland Remodeling" },
+    { property: "og:description", content: "Manage Highland Remodeling customer accounts." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AdminCustomers,
 });
 

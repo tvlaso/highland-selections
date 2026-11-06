@@ -8,7 +8,14 @@ import { AppHeader } from "@/components/AppHeader";
 import { DesignsGallery } from "@/components/DesignsGallery";
 
 export const Route = createFileRoute("/designs/$projectId")({
-  head: () => ({ meta: [{ title: "Designs | Highland Remodeling" }] }),
+  head: () => ({ meta: [
+    { title: "My Project Designs | Highland Remodeling" },
+    { name: "description", content: "View your Highland Remodeling project design inspiration." },
+    { property: "og:title", content: "My Project Designs | Highland Remodeling" },
+    { property: "og:description", content: "View your Highland Remodeling project design inspiration." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: CustomerDesigns,
 });
 

@@ -18,9 +18,14 @@ import { syncSelectionsVersion } from "@/lib/selections.functions";
 import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({
-    meta: [{ title: "My Project | Highland Remodeling" }],
-  }),
+  head: () => ({ meta: [
+    { title: "My Projects | Highland Remodeling" },
+    { name: "description", content: "Review your project updates and approve individual selections." },
+    { property: "og:title", content: "My Projects | Highland Remodeling" },
+    { property: "og:description", content: "Review your project updates and approve individual selections." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Dashboard,
 });
 

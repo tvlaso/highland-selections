@@ -10,22 +10,33 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AuthenticatedBathroomRouteImport } from './routes/_authenticated/bathroom'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminProjectIdRouteImport } from './routes/admin.$projectId'
 import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminTemplatesRouteImport } from './routes/admin.templates'
 import { Route as DesignsProjectIdRouteImport } from './routes/designs.$projectId'
+import { Route as AuthenticatedBathroomIndexRouteImport } from './routes/_authenticated/bathroom.index'
+import { Route as AuthenticatedBathroomIdRouteImport } from './routes/_authenticated/bathroom.$id'
+import { Route as AuthenticatedBathroomHistoryRouteImport } from './routes/_authenticated/bathroom.history'
+import { Route as AuthenticatedBathroomSettingsRouteImport } from './routes/_authenticated/bathroom.settings'
+import { Route as AuthenticatedBathroomTemplatesRouteImport } from './routes/_authenticated/bathroom.templates'
 import { Route as AdminChecklistProjectIdRouteImport } from './routes/admin.checklist.$projectId'
 import { Route as AdminDesignsProjectIdRouteImport } from './routes/admin.designs.$projectId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -47,6 +58,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBathroomRoute = AuthenticatedBathroomRouteImport.update({
+  id: '/bathroom',
+  path: '/bathroom',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
@@ -78,6 +94,35 @@ const DesignsProjectIdRoute = DesignsProjectIdRouteImport.update({
   path: '/designs/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedBathroomIndexRoute =
+  AuthenticatedBathroomIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedBathroomRoute,
+  } as any)
+const AuthenticatedBathroomIdRoute = AuthenticatedBathroomIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedBathroomRoute,
+} as any)
+const AuthenticatedBathroomHistoryRoute =
+  AuthenticatedBathroomHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => AuthenticatedBathroomRoute,
+  } as any)
+const AuthenticatedBathroomSettingsRoute =
+  AuthenticatedBathroomSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedBathroomRoute,
+  } as any)
+const AuthenticatedBathroomTemplatesRoute =
+  AuthenticatedBathroomTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
+    getParentRoute: () => AuthenticatedBathroomRoute,
+  } as any)
 const AdminChecklistProjectIdRoute = AdminChecklistProjectIdRouteImport.update({
   id: '/admin/checklist/$projectId',
   path: '/admin/checklist/$projectId',
@@ -95,14 +140,20 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/bathroom': typeof AuthenticatedBathroomRouteWithChildren
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/templates': typeof AdminTemplatesRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/bathroom/$id': typeof AuthenticatedBathroomIdRoute
+  '/bathroom/history': typeof AuthenticatedBathroomHistoryRoute
+  '/bathroom/settings': typeof AuthenticatedBathroomSettingsRoute
+  '/bathroom/templates': typeof AuthenticatedBathroomTemplatesRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
   '/admin/designs/$projectId': typeof AdminDesignsProjectIdRoute
+  '/bathroom/': typeof AuthenticatedBathroomIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -116,24 +167,36 @@ export interface FileRoutesByTo {
   '/admin/templates': typeof AdminTemplatesRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin': typeof AdminIndexRoute
+  '/bathroom/$id': typeof AuthenticatedBathroomIdRoute
+  '/bathroom/history': typeof AuthenticatedBathroomHistoryRoute
+  '/bathroom/settings': typeof AuthenticatedBathroomSettingsRoute
+  '/bathroom/templates': typeof AuthenticatedBathroomTemplatesRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
   '/admin/designs/$projectId': typeof AdminDesignsProjectIdRoute
+  '/bathroom': typeof AuthenticatedBathroomIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/bathroom': typeof AuthenticatedBathroomRouteWithChildren
   '/admin/$projectId': typeof AdminProjectIdRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/templates': typeof AdminTemplatesRoute
   '/designs/$projectId': typeof DesignsProjectIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/_authenticated/bathroom/$id': typeof AuthenticatedBathroomIdRoute
+  '/_authenticated/bathroom/history': typeof AuthenticatedBathroomHistoryRoute
+  '/_authenticated/bathroom/settings': typeof AuthenticatedBathroomSettingsRoute
+  '/_authenticated/bathroom/templates': typeof AuthenticatedBathroomTemplatesRoute
   '/admin/checklist/$projectId': typeof AdminChecklistProjectIdRoute
   '/admin/designs/$projectId': typeof AdminDesignsProjectIdRoute
+  '/_authenticated/bathroom/': typeof AuthenticatedBathroomIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -143,14 +206,20 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/bathroom'
     | '/admin/$projectId'
     | '/admin/catalog'
     | '/admin/customers'
     | '/admin/templates'
     | '/designs/$projectId'
     | '/admin/'
+    | '/bathroom/$id'
+    | '/bathroom/history'
+    | '/bathroom/settings'
+    | '/bathroom/templates'
     | '/admin/checklist/$projectId'
     | '/admin/designs/$projectId'
+    | '/bathroom/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -164,27 +233,40 @@ export interface FileRouteTypes {
     | '/admin/templates'
     | '/designs/$projectId'
     | '/admin'
+    | '/bathroom/$id'
+    | '/bathroom/history'
+    | '/bathroom/settings'
+    | '/bathroom/templates'
     | '/admin/checklist/$projectId'
     | '/admin/designs/$projectId'
+    | '/bathroom'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/auth'
     | '/dashboard'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/_authenticated/bathroom'
     | '/admin/$projectId'
     | '/admin/catalog'
     | '/admin/customers'
     | '/admin/templates'
     | '/designs/$projectId'
     | '/admin/'
+    | '/_authenticated/bathroom/$id'
+    | '/_authenticated/bathroom/history'
+    | '/_authenticated/bathroom/settings'
+    | '/_authenticated/bathroom/templates'
     | '/admin/checklist/$projectId'
     | '/admin/designs/$projectId'
+    | '/_authenticated/bathroom/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -206,6 +288,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -235,6 +324,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/bathroom': {
+      id: '/_authenticated/bathroom'
+      path: '/bathroom'
+      fullPath: '/bathroom'
+      preLoaderRoute: typeof AuthenticatedBathroomRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -278,6 +374,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DesignsProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/bathroom/': {
+      id: '/_authenticated/bathroom/'
+      path: '/'
+      fullPath: '/bathroom/'
+      preLoaderRoute: typeof AuthenticatedBathroomIndexRouteImport
+      parentRoute: typeof AuthenticatedBathroomRoute
+    }
+    '/_authenticated/bathroom/$id': {
+      id: '/_authenticated/bathroom/$id'
+      path: '/$id'
+      fullPath: '/bathroom/$id'
+      preLoaderRoute: typeof AuthenticatedBathroomIdRouteImport
+      parentRoute: typeof AuthenticatedBathroomRoute
+    }
+    '/_authenticated/bathroom/history': {
+      id: '/_authenticated/bathroom/history'
+      path: '/history'
+      fullPath: '/bathroom/history'
+      preLoaderRoute: typeof AuthenticatedBathroomHistoryRouteImport
+      parentRoute: typeof AuthenticatedBathroomRoute
+    }
+    '/_authenticated/bathroom/settings': {
+      id: '/_authenticated/bathroom/settings'
+      path: '/settings'
+      fullPath: '/bathroom/settings'
+      preLoaderRoute: typeof AuthenticatedBathroomSettingsRouteImport
+      parentRoute: typeof AuthenticatedBathroomRoute
+    }
+    '/_authenticated/bathroom/templates': {
+      id: '/_authenticated/bathroom/templates'
+      path: '/templates'
+      fullPath: '/bathroom/templates'
+      preLoaderRoute: typeof AuthenticatedBathroomTemplatesRouteImport
+      parentRoute: typeof AuthenticatedBathroomRoute
+    }
     '/admin/checklist/$projectId': {
       id: '/admin/checklist/$projectId'
       path: '/admin/checklist/$projectId'
@@ -295,8 +426,41 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedBathroomRouteChildren {
+  AuthenticatedBathroomIdRoute: typeof AuthenticatedBathroomIdRoute
+  AuthenticatedBathroomHistoryRoute: typeof AuthenticatedBathroomHistoryRoute
+  AuthenticatedBathroomSettingsRoute: typeof AuthenticatedBathroomSettingsRoute
+  AuthenticatedBathroomTemplatesRoute: typeof AuthenticatedBathroomTemplatesRoute
+  AuthenticatedBathroomIndexRoute: typeof AuthenticatedBathroomIndexRoute
+}
+
+const AuthenticatedBathroomRouteChildren: AuthenticatedBathroomRouteChildren = {
+  AuthenticatedBathroomIdRoute: AuthenticatedBathroomIdRoute,
+  AuthenticatedBathroomHistoryRoute: AuthenticatedBathroomHistoryRoute,
+  AuthenticatedBathroomSettingsRoute: AuthenticatedBathroomSettingsRoute,
+  AuthenticatedBathroomTemplatesRoute: AuthenticatedBathroomTemplatesRoute,
+  AuthenticatedBathroomIndexRoute: AuthenticatedBathroomIndexRoute,
+}
+
+const AuthenticatedBathroomRouteWithChildren =
+  AuthenticatedBathroomRoute._addFileChildren(
+    AuthenticatedBathroomRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBathroomRoute: typeof AuthenticatedBathroomRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBathroomRoute: AuthenticatedBathroomRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   ResetPasswordRoute: ResetPasswordRoute,

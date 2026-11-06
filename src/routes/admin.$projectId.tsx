@@ -55,7 +55,14 @@ import { generateSelectionsPdf } from "@/lib/exportSelectionsPdf";
 import { listCustomers } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/$projectId")({
-  head: () => ({ meta: [{ title: "Manage Project | Highland Remodeling" }] }),
+  head: () => ({ meta: [
+    { title: "Manage Project | Highland Remodeling" },
+    { name: "description", content: "Manage project selections, rooms, updates and customer details." },
+    { property: "og:title", content: "Manage Project | Highland Remodeling" },
+    { property: "og:description", content: "Manage project selections, rooms, updates and customer details." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ProjectDetail,
 });
 

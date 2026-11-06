@@ -14,6 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
+      bathroom_consultations: {
+        Row: {
+          approved_images: Json
+          created_at: string
+          created_by: string
+          id: string
+          project_number: number
+          proposal_details: Json
+          selections: Json
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_images?: Json
+          created_at?: string
+          created_by?: string
+          id?: string
+          project_number?: never
+          proposal_details?: Json
+          selections?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_images?: Json
+          created_at?: string
+          created_by?: string
+          id?: string
+          project_number?: never
+          proposal_details?: Json
+          selections?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bathroom_proposal_versions: {
+        Row: {
+          consultation_id: string
+          created_at: string
+          created_by: string
+          id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          consultation_id: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          consultation_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bathroom_proposal_versions_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "bathroom_consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bathroom_settings: {
+        Row: {
+          id: string
+          rates: Json
+          templates: Json
+        }
+        Insert: {
+          id: string
+          rates?: Json
+          templates?: Json
+        }
+        Update: {
+          id?: string
+          rates?: Json
+          templates?: Json
+        }
+        Relationships: []
+      }
       design_comments: {
         Row: {
           author_id: string | null
@@ -775,6 +867,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      save_bathroom_proposal: {
+        Args: { p_id: string; p_snapshot: Json }
+        Returns: number
       }
     }
     Enums: {

@@ -37,7 +37,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PROJECT_STATUSES, projectTypeLabel } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/")({
-  head: () => ({ meta: [{ title: "Admin | Highland Remodeling" }] }),
+  head: () => ({ meta: [
+    { title: "Admin Projects | Highland Remodeling" },
+    { name: "description", content: "Manage Highland Remodeling jobs and bathroom consultations." },
+    { property: "og:title", content: "Admin Projects | Highland Remodeling" },
+    { property: "og:description", content: "Manage Highland Remodeling jobs and bathroom consultations." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AdminHome,
 });
 
@@ -337,6 +344,11 @@ function AdminHome() {
     <div className="min-h-screen bg-background">
       <AppHeader subtitle="Contractor Admin" />
       <main className="mx-auto max-w-5xl px-4 py-6">
+        <div className="mb-4">
+          <Button variant="outline" asChild>
+            <Link to="/bathroom"><LayoutTemplate className="h-4 w-4" /> Bathroom Consultations</Link>
+          </Button>
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold">Projects</h1>
           <div className="flex gap-2">

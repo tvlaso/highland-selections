@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep bathroom consultations separate from existing jobs and customer workflows, with admin-only RLS and protected routes; this avoids collecting customer data or changing selections behavior.
+- Define bathroom formulas, conditional field definitions, and validated proposal snapshots in the bathroom model module; use that calculation for both internal prices and grouped PDF prices to avoid drift.
+- Keep bathroom reference layouts and generated images in private storage, and generate reference-based edits through authenticated admin server functions; save immutable proposal snapshots with serialized version allocation.

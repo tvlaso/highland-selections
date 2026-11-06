@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [
-      { title: "Sign In | Highland Remodeling Portal" },
-      { name: "description", content: "Sign in to view and approve your Highland Remodeling project selections." },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "Sign In | Highland Remodeling Portal" },
+    { name: "description", content: "Sign in to view and approve your Highland Remodeling project selections." },
+    { property: "og:title", content: "Sign In | Highland Remodeling Portal" },
+    { property: "og:description", content: "Sign in to view and approve your Highland Remodeling project selections." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AuthPage,
 });
 

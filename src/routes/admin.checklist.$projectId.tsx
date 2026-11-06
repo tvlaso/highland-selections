@@ -21,7 +21,14 @@ import {
 import { CATEGORIES } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/checklist/$projectId")({
-  head: () => ({ meta: [{ title: "Material Order Checklist | Highland Remodeling" }] }),
+  head: () => ({ meta: [
+    { title: "Material Order Checklist | Highland Remodeling" },
+    { name: "description", content: "Track project materials and order status." },
+    { property: "og:title", content: "Material Order Checklist | Highland Remodeling" },
+    { property: "og:description", content: "Track project materials and order status." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ChecklistPage,
 });
 

@@ -13,7 +13,14 @@ import { Button } from "@/components/ui/button";
 import { CATEGORIES, formatCurrency } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/catalog")({
-  head: () => ({ meta: [{ title: "Master Catalog | Highland Remodeling" }] }),
+  head: () => ({ meta: [
+    { title: "Master Catalog | Highland Remodeling" },
+    { name: "description", content: "Manage Highland Remodeling products and catalog imports." },
+    { property: "og:title", content: "Master Catalog | Highland Remodeling" },
+    { property: "og:description", content: "Manage Highland Remodeling products and catalog imports." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: CatalogPage,
 });
 

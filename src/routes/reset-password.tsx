@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({
-    meta: [
-      { title: "Reset Password | Highland Remodeling Portal" },
-      { name: "description", content: "Set a new password for your Highland Remodeling portal account." },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "Reset Password | Highland Remodeling Portal" },
+    { name: "description", content: "Set a new password for your Highland Remodeling portal account." },
+    { property: "og:title", content: "Reset Password | Highland Remodeling Portal" },
+    { property: "og:description", content: "Set a new password for your Highland Remodeling portal account." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ResetPasswordPage,
 });
 

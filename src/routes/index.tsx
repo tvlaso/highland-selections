@@ -8,6 +8,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Highland Remodeling | Selections Portal" },
       { name: "description", content: "Review and approve your bath, kitchen, and tile selections for your Highland Remodeling project." },
+      { property: "og:title", content: "Highland Remodeling | Selections Portal" },
+      { property: "og:description", content: "Review and approve your bath, kitchen, and tile selections for your Highland Remodeling project." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,
